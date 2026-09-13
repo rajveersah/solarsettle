@@ -314,7 +314,6 @@ export default function GovtDashboard() {
           <TiltCard className="stat-card"><p className="stat-label">Monitored Accounts</p><p className="stat-value">{displayProsumers.length}</p></TiltCard>
           <TiltCard className="stat-card"><p className="stat-label">Open Fraud Cases</p><p className="stat-value alert">{activeFraudCount}</p></TiltCard>
           <TiltCard className="stat-card"><p className="stat-label">Average Trust</p><p className="stat-value trust">{avgTrust}/100</p></TiltCard>
-          <TiltCard className="stat-card"><p className="stat-label">Demo Mode</p><p className="stat-value solar">ON</p></TiltCard>
         </div>
 
         {demoCase && (
