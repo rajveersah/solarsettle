@@ -1,5 +1,26 @@
 /* Prosumer dashboard custom elements — aligned with the buyer marketplace design system. */
 
+.ps-header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ss-text);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  text-decoration: none;
+}
+
+.ps-header-brand img {
+  width: 32px;
+  height: 32px;
+}
+
+@media (max-width: 650px) {
+  .ps-header-brand span { font-size: 15px; }
+  .ps-header-brand img { width: 28px; height: 28px; }
+}
+
 /* Demo banner */
 .demo-banner {
   display: flex;

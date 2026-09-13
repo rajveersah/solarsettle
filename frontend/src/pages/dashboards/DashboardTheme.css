@@ -147,7 +147,7 @@
   box-shadow: var(--ss-shadow);
 }
 .buyer-theme .govt-controls { display: flex; align-items: center; gap: 14px; }
-.buyer-theme .govt-tabs { display: inline-flex; gap: 4px; margin: 2px 0 0; padding: 5px; border: 1px solid var(--ss-border); border-radius: 12px; background: var(--ss-surface); box-shadow: var(--ss-shadow); }
+.buyer-theme .govt-tabs { display: inline-flex; gap: 4px; margin: 2px 0 24px; padding: 5px; border: 1px solid var(--ss-border); border-radius: 12px; background: var(--ss-surface); box-shadow: var(--ss-shadow); }
 .buyer-theme .govt-tabs button { padding: 9px 14px; border: 0; border-radius: 8px; color: var(--ss-muted); background: transparent; cursor: pointer; font: inherit; font-size: 13px; font-weight: 800; }
 .buyer-theme .govt-tabs button:hover { color: var(--ss-primary); background: var(--ss-blue-soft); }
 .buyer-theme .govt-tabs button.active { color: #fff; background: var(--ss-primary); }
@@ -175,11 +175,19 @@
 .buyer-theme .grid-track-head span,
 .buyer-theme .grid-track small { color: var(--ss-muted); font-size: 11px; }
 .buyer-theme .grid-track-head b { color: var(--ss-primary); font-size: 12px; white-space: nowrap; }
-.buyer-theme .grid-track svg { display: block; width: 100%; height: 72px; margin: 8px 0; overflow: visible; }
+.buyer-theme .grid-track svg { display: block; width: 100%; height: 108px; margin: 8px 0; overflow: visible; cursor: crosshair; }
 .buyer-theme .timeline-axis { stroke: var(--ss-border); stroke-width: 1; }
+.buyer-theme .timeline-grid { stroke: var(--ss-border); stroke-width: 1; opacity: .7; }
+.buyer-theme .timeline-area { opacity: .8; }
+.buyer-theme .timeline-fill-start { stop-color: var(--ss-primary); stop-opacity: .3; }
+.buyer-theme .timeline-fill-end { stop-color: var(--ss-primary); stop-opacity: 0; }
 .buyer-theme .timeline-line { fill: none; stroke: var(--ss-primary); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-.buyer-theme .timeline-point { fill: var(--ss-primary); stroke: #fff; stroke-width: 2; }
+.buyer-theme .timeline-guide { stroke: var(--ss-muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.buyer-theme .timeline-point { fill: var(--ss-primary); stroke: var(--ss-surface-2); stroke-width: 2; cursor: pointer; }
+.buyer-theme .timeline-point.active { stroke: var(--ss-text); stroke-width: 2.5; }
 .buyer-theme .timeline-point.risk { fill: var(--ss-red); }
+.buyer-theme .timeline-tooltip rect { display: none; }
+.buyer-theme .timeline-tooltip text { fill: var(--ss-text); font-size: 8px; font-weight: 700; }
 .buyer-theme .timeline-label { fill: var(--ss-muted); font-size: 9px; text-anchor: middle; }
 .buyer-theme .timeline-legend { display: flex; gap: 16px; color: var(--ss-muted); font-size: 12px; }
 .buyer-theme .timeline-legend span { display: inline-flex; align-items: center; gap: 6px; }

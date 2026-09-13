@@ -244,6 +244,10 @@ return (
         <main className="ss-main">
           <header className="ss-header">
             <div className="ss-mobile-menu" style={{ cursor: 'pointer' }} onClick={() => setSidebarOpen(!sidebarOpen)}>☰</div>
+            <Link className="ps-header-brand" to="/" aria-label="SolarSettle home">
+              <img src="/solarsettle-logo.svg" alt="" />
+              <span>SolarSettle</span>
+            </Link>
             <div className="ss-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {isWalletConnected ? (
                 <span className="ss-badge" style={{ padding: '4px 10px', fontSize: '12px' }}>{short(account)}</span>

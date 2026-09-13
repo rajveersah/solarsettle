@@ -262,8 +262,6 @@ export default function GovtDashboard() {
         <h2>🏛️ Government Dashboard</h2>
         <p className="dashboard-sub">Role: Government. {isWalletConnected ? ('Connected: ' + short(account)) : 'Presentation preview with sample registry data.'}</p>
 
-        {demoMode && <div className="demo-banner"><strong>Demo presentation mode</strong><span>Sample registry values are shown for review. Connect MetaMask to switch to live contract data.</span></div>}
-
         {!isWalletConnected && (
           <div className="panel-form">
             <h3>🔌 Connect MetaMask to interact with the blockchain</h3>
@@ -462,12 +460,26 @@ function GridHealthTimeline({ data, range, selectedState }) {
 
 function GridTrack({ provider, points }) {
   const width = 340;
-  const height = 72;
+  const height = 108;
+  const chartTop = 34;
+  const chartBottom = 92;
+  const [activeIndex, setActiveIndex] = useState(Math.max(points.length - 1, 0));
+  useEffect(() => setActiveIndex(Math.max(points.length - 1, 0)), [points]);
   const max = Math.max(...points.map((point) => point.generation), 1);
-  const chartPoints = points.map((point, index) => ({ ...point, x: 6 + (index * (width - 12)) / Math.max(points.length - 1, 1), y: height - 8 - (point.generation / max) * (height - 18) }));
+  const chartPoints = points.map((point, index) => ({ ...point, x: 8 + (index * (width - 16)) / Math.max(points.length - 1, 1), y: chartBottom - (point.generation / max) * (chartBottom - chartTop) }));
   const path = chartPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(' ');
+  const areaPath = `${path} L ${chartPoints.at(-1).x.toFixed(1)} ${chartBottom} L ${chartPoints[0].x.toFixed(1)} ${chartBottom} Z`;
   const riskCount = points.filter((point) => point.risk).length;
-  return <article className="grid-track"><div className="grid-track-head"><div><strong>{provider.name}</strong><span>{provider.city}, {provider.stateName}</span></div><b>{Math.round(points.reduce((sum, point) => sum + point.generation, 0)).toLocaleString('en-IN')} kWh</b></div><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${provider.name} generation timeline`}><path d={path} className="timeline-line" />{chartPoints.filter((point) => point.risk).map((point, index) => <circle key={index} cx={point.x} cy={point.y} r="3.5" className="timeline-point risk"><title>{`${point.label}: ${Math.round(point.generation)} kWh risk spike`}</title></circle>)}</svg><small>{provider.reliability}% reliability · {riskCount ? `${riskCount} spike${riskCount > 1 ? 's' : ''}` : 'No spikes'}</small></article>;
+  const activePoint = chartPoints[Math.min(activeIndex, chartPoints.length - 1)];
+  const gradientId = `grid-fill-${provider.id}`;
+  const selectPointFromPointer = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * width;
+    const index = Math.round(((x - 8) / (width - 16)) * Math.max(points.length - 1, 1));
+    setActiveIndex(Math.max(0, Math.min(points.length - 1, index)));
+  };
+  const tooltipX = Math.min(Math.max(activePoint.x - 49, 4), width - 102);
+  return <article className="grid-track"><div className="grid-track-head"><div><strong>{provider.name}</strong><span>{provider.city}, {provider.stateName}</span></div><b>{Math.round(points.reduce((sum, point) => sum + point.generation, 0)).toLocaleString('en-IN')} kWh</b></div><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${provider.name} interactive generation timeline`} onMouseMove={selectPointFromPointer} onClick={selectPointFromPointer}><defs><linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1"><stop offset="0%" className="timeline-fill-start" /><stop offset="100%" className="timeline-fill-end" /></linearGradient></defs><line x1="8" x2={width - 8} y1={chartTop} y2={chartTop} className="timeline-grid" /><line x1="8" x2={width - 8} y1={(chartTop + chartBottom) / 2} y2={(chartTop + chartBottom) / 2} className="timeline-grid" /><line x1="8" x2={width - 8} y1={chartBottom} y2={chartBottom} className="timeline-axis" /><path d={areaPath} className="timeline-area" fill={`url(#${gradientId})`} /><path d={path} className="timeline-line" /><line x1={activePoint.x} x2={activePoint.x} y1={chartTop} y2={chartBottom} className="timeline-guide" />{chartPoints.map((point, index) => <circle key={point.label} cx={point.x} cy={point.y} r={index === activeIndex ? 5 : point.risk ? 3.8 : 2.6} className={`timeline-point ${point.risk ? 'risk' : ''} ${index === activeIndex ? 'active' : ''}`} tabIndex="0" role="button" aria-label={`${point.label}: ${Math.round(point.generation)} kWh${point.risk ? ', risk spike' : ''}`} onFocus={() => setActiveIndex(index)} onMouseEnter={() => setActiveIndex(index)} onClick={() => setActiveIndex(index)} />)}<g className="timeline-tooltip" transform={`translate(${tooltipX} 3)`}><rect width="102" height="25" rx="5" /><text x="7" y="11">{activePoint.label}</text><text x="7" y="21">{Math.round(activePoint.generation)} kWh{activePoint.risk ? ' · Risk' : ''}</text></g></svg><small>{provider.reliability}% reliability · {riskCount ? `${riskCount} spike${riskCount > 1 ? 's' : ''}` : 'No spikes'} · Hover or select a point for details</small></article>;
 }
 
 function AlertCenter({ alerts, selectedState }) {
