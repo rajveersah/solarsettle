@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWeb3 } from '../../context/Web3Context';
 import './BuyerDashboard.css';
+import './GlassDashboard.css';
 
 /**
  * SolarSettle Buyer Dashboard
@@ -966,7 +967,9 @@ function icon(name) {
 
     search: "⌕",
 
-    bell: "♢",
+    bell: '<svg class="ss-header-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 22h4"/></svg>',
+
+    sun: '<svg class="ss-brand-sun" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="7"/><path d="M20 2v7M20 31v7M2 20h7M31 20h7M7.3 7.3l5 5M27.7 27.7l5 5M32.7 7.3l-5 5M12.3 27.7l-5 5"/></svg>',
 
     verified: "✓",
 
@@ -1181,7 +1184,7 @@ function appShell(content) {
         <div class="ss-brand">
 
           <div class="ss-brand-mark">
-            ☀
+            ${icon("sun")}
           </div>
 
           <div>
@@ -5643,5 +5646,9 @@ export default function BuyerDashboard() {
     };
   }, [logout, navigate]);
 
-  return <div id={APP_ROOT_ID} />;
+  return <div
+    id={APP_ROOT_ID}
+    className="glass-dashboard"
+    style={{ '--ss-dashboard-image': `url(${process.env.PUBLIC_URL}/solarsettle-hero.png)` }}
+  />;
 }

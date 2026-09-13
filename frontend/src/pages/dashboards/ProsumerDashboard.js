@@ -5,6 +5,7 @@ import { useWeb3 } from '../../context/Web3Context';
 import useTx from '../../hooks/useTx';
 import './BuyerDashboard.css';
 import './ProsumerDashboard.css';
+import './GlassDashboard.css';
 import { generateReading } from '../../lib/meterSimulator';
 import { fetchSellerSettlements, fetchReadingLog, fetchTrustHistory } from '../../lib/contractReads';
 
@@ -207,7 +208,11 @@ export default function ProsumerDashboard() {
   };
 
 return (
-    <div id="solarsettle-buyer-dashboard">
+    <div
+      id="solarsettle-buyer-dashboard"
+      className="glass-dashboard"
+      style={{ '--ss-dashboard-image': `url(${process.env.PUBLIC_URL}/solarsettle-hero.png)` }}
+    >
       <div className="ss-app">
         <aside className={'ss-sidebar' + (sidebarOpen ? ' mobile-open' : '')}>
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>

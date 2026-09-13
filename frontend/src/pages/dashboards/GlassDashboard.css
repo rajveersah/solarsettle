@@ -1,0 +1,479 @@
+/* Shared solar-glass presentation layer. It intentionally changes only visual tokens. */
+.glass-dashboard {
+  --ss-bg: #0a2230;
+  --ss-surface: rgba(8, 32, 47, .72);
+  --ss-surface-2: rgba(255, 255, 255, .09);
+  --ss-text: #f7fbff;
+  --ss-muted: rgba(229, 242, 248, .76);
+  --ss-border: rgba(255, 255, 255, .2);
+  --ss-border-strong: rgba(255, 255, 255, .34);
+  --ss-primary: #aef6bd;
+  --ss-primary-dark: #78d990;
+  --ss-blue-soft: rgba(174, 246, 189, .13);
+  --ss-green: #aef6bd;
+  --ss-green-soft: rgba(174, 246, 189, .14);
+  --ss-orange: #ffd285;
+  --ss-orange-soft: rgba(255, 210, 133, .14);
+  --ss-red: #ff9d9d;
+  --ss-shadow: 0 18px 48px rgba(1, 15, 24, .3);
+  position: relative;
+  min-height: 100vh;
+  color: var(--ss-text);
+  background-image: linear-gradient(100deg, rgba(4, 25, 37, .72), rgba(7, 39, 56, .42) 57%, rgba(3, 20, 38, .67)), var(--ss-dashboard-image);
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+.glass-dashboard .ss-main,
+.glass-dashboard .ss-content,
+.glass-dashboard .dashboard { background: transparent; }
+.glass-dashboard .ss-sidebar,
+.glass-dashboard .ss-header {
+  background: rgba(5, 26, 40, .68);
+  border-color: rgba(255, 255, 255, .18);
+  box-shadow: none;
+  backdrop-filter: blur(18px) saturate(135%);
+}
+.glass-dashboard .ss-sidebar { border-right-color: rgba(255, 255, 255, .18); }
+.glass-dashboard .ss-header { border-bottom-color: rgba(255, 255, 255, .18); }
+.glass-dashboard .ss-brand,
+.glass-dashboard .ss-brand strong,
+.glass-dashboard .ps-header-brand,
+.glass-dashboard .dashboard h2,
+.glass-dashboard .dashboard h3,
+.glass-dashboard .ss-page-head h1,
+.glass-dashboard .ss-card h2 { color: var(--ss-text); }
+.glass-dashboard .ss-brand span,
+.glass-dashboard .dashboard-sub,
+.glass-dashboard .ss-muted,
+.glass-dashboard .ss-label,
+.glass-dashboard .ss-page-head p { color: var(--ss-muted); }
+.glass-dashboard .ss-brand-mark { color: #09212f; background: #aef6bd; box-shadow: 0 7px 22px rgba(174, 246, 189, .23); }
+.glass-dashboard .ss-brand-sun { width: 25px; height: 25px; fill: #09212f; stroke: #09212f; stroke-width: 2.6; stroke-linecap: round; }
+.glass-dashboard .ss-header-bell { width: 19px; height: 19px; fill: none; stroke: #f7fbff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.glass-dashboard .ss-nav-item { color: rgba(238, 248, 251, .72); }
+.glass-dashboard .ss-nav-item:hover,
+.glass-dashboard .ss-nav-item.active { color: #fff; background: rgba(174, 246, 189, .16); }
+.glass-dashboard .ss-nav-item.active { box-shadow: inset 0 0 0 1px rgba(174, 246, 189, .22); }
+.glass-dashboard .ss-sidebar-help { background: rgba(255, 255, 255, .07); border-color: rgba(255, 255, 255, .14); }
+.glass-dashboard .ss-sidebar-help span { color: var(--ss-muted); }
+.glass-dashboard .ss-sidebar-help button,
+.glass-dashboard .ss-logout { color: #aef6bd; }
+
+.glass-dashboard .ss-card,
+.glass-dashboard .stat-card,
+.glass-dashboard .panel-form,
+.glass-dashboard .table-wrap,
+.glass-dashboard .govt-map-panel,
+.glass-dashboard .govt-controls,
+.glass-dashboard .grid-health-panel,
+.glass-dashboard .alert-center,
+.glass-dashboard .fraud-demo-panel,
+.glass-dashboard .ss-action-card,
+.glass-dashboard .ss-provider-card,
+.glass-dashboard .ss-filters,
+.glass-dashboard .ss-provider-detail-head,
+.glass-dashboard .ss-provider-switcher {
+  background: linear-gradient(135deg, rgba(10, 42, 57, .77), rgba(8, 29, 47, .67));
+  border-color: rgba(255, 255, 255, .2);
+  box-shadow: var(--ss-shadow);
+  backdrop-filter: blur(15px) saturate(125%);
+}
+.glass-dashboard .ss-card:hover,
+.glass-dashboard .stat-card:hover,
+.glass-dashboard .ss-provider-card:hover,
+.glass-dashboard .ss-action-card:hover { border-color: rgba(174, 246, 189, .54); box-shadow: 0 20px 46px rgba(1, 15, 24, .38); }
+.glass-dashboard .ss-search,
+.glass-dashboard .ss-text-input,
+.glass-dashboard .form-input,
+.glass-dashboard .ss-energy-input,
+.glass-dashboard .ss-filter-search,
+.glass-dashboard .ss-range-control,
+.glass-dashboard .range-control,
+.glass-dashboard .map-detail,
+.glass-dashboard .grid-track,
+.glass-dashboard .alert-card,
+.glass-dashboard .demo-banner,
+.glass-dashboard .ps-checklist-item { background: rgba(255, 255, 255, .09); border-color: rgba(255, 255, 255, .18); color: var(--ss-text); }
+.glass-dashboard input,
+.glass-dashboard select,
+.glass-dashboard textarea { color: var(--ss-text) !important; }
+.glass-dashboard input::placeholder { color: rgba(236, 246, 250, .54); }
+.glass-dashboard .ss-card *,
+.glass-dashboard .table-wrap *,
+.glass-dashboard .panel-form * { border-color: rgba(255, 255, 255, .16); }
+.glass-dashboard .ss-card p,
+.glass-dashboard .ss-card small,
+.glass-dashboard .panel-form p,
+.glass-dashboard .table-wrap p,
+.glass-dashboard .alert-card p,
+.glass-dashboard .grid-track small { color: var(--ss-muted); }
+.glass-dashboard .ss-table th,
+.glass-dashboard .data-table th { color: rgba(235, 246, 251, .68); background: rgba(255, 255, 255, .09); }
+.glass-dashboard .ss-table td,
+.glass-dashboard .data-table td { color: var(--ss-text); background: rgba(3, 23, 37, .15); }
+.glass-dashboard .ss-table tr:hover td,
+.glass-dashboard .data-table tr:hover td { background: rgba(174, 246, 189, .1); }
+.glass-dashboard .ss-button.primary,
+.glass-dashboard .connect-btn,
+.glass-dashboard .buy-btn,
+.glass-dashboard .govt-tabs button.active,
+.glass-dashboard .range-control button.active { color: #08212e; background: #aef6bd; box-shadow: 0 7px 20px rgba(174, 246, 189, .18); }
+.glass-dashboard .ss-button.secondary,
+.glass-dashboard .ss-small-button,
+.glass-dashboard .ss-icon-button,
+.glass-dashboard .scope-reset,
+.glass-dashboard .govt-tabs,
+.glass-dashboard .range-control { color: var(--ss-text); background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .18); }
+.glass-dashboard .ss-avatar { color: #08212e; background: #aef6bd; }
+.glass-dashboard .ss-badge { color: #c6fad1; background: rgba(174, 246, 189, .13); border-color: rgba(174, 246, 189, .3); }
+.glass-dashboard .ss-badge.warning { color: #ffe2a6; background: rgba(255, 191, 99, .13); }
+.glass-dashboard .ss-positive,
+.glass-dashboard .stat-value.trust,
+.glass-dashboard .live-tag,
+.glass-dashboard .govt-map-heading .eyebrow { color: #aef6bd; }
+.glass-dashboard .stat-value.solar { color: #ffd285; }
+.glass-dashboard .stat-value.alert { color: #ff9d9d; }
+.glass-dashboard .ss-location-pill,
+.glass-dashboard .status-pill.active { color: #c6fad1; background: rgba(174, 246, 189, .14); border-color: rgba(174, 246, 189, .28); }
+.glass-dashboard .status-pill.alert { color: #ffd0d0; background: rgba(255, 106, 106, .16); }
+.glass-dashboard .status-pill.pending { color: #ffe1a5; background: rgba(255, 192, 96, .15); }
+.glass-dashboard .alert-card.red { background: rgba(102, 26, 36, .42); }.glass-dashboard .alert-card.amber { background: rgba(100, 64, 23, .42); }.glass-dashboard .alert-card.green { background: rgba(20, 81, 53, .42); }
+.glass-dashboard .timeline-tooltip text,
+.glass-dashboard .timeline-label { fill: #effaff; }.glass-dashboard .timeline-axis,.glass-dashboard .timeline-grid { stroke: rgba(255,255,255,.24); }
+
+@media (max-width: 720px) { .glass-dashboard { background-attachment: scroll; }.glass-dashboard .ss-sidebar { background: rgba(5, 26, 40, .9); } }
+
+/* The original buyer dashboard is a self-contained stylesheet with some
+   highly-specific rules. These final declarations keep the visual layer
+   consistently on top without affecting dashboard behavior. */
+#solarsettle-buyer-dashboard.glass-dashboard,
+#solarsettle-govt-dashboard.glass-dashboard {
+  color: #f7fbff !important;
+  background-color: #0a2230 !important;
+  background-image: linear-gradient(100deg, rgba(4, 25, 37, .67), rgba(7, 39, 56, .38) 57%, rgba(3, 20, 38, .62)), var(--ss-dashboard-image) !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+}
+.glass-dashboard .ss-main,
+.glass-dashboard .ss-content,
+.glass-dashboard .dashboard { background: transparent !important; }
+.glass-dashboard .ss-sidebar,
+.glass-dashboard .ss-header { background: rgba(5, 26, 40, .72) !important; }
+.glass-dashboard .ss-card,
+.glass-dashboard .stat-card,
+.glass-dashboard .panel-form,
+.glass-dashboard .table-wrap,
+.glass-dashboard .govt-map-panel,
+.glass-dashboard .govt-controls,
+.glass-dashboard .grid-health-panel,
+.glass-dashboard .alert-center,
+.glass-dashboard .fraud-demo-panel,
+.glass-dashboard .ss-action-card,
+.glass-dashboard .ss-provider-card,
+.glass-dashboard .ss-filters,
+.glass-dashboard .ss-provider-detail-head,
+.glass-dashboard .ss-provider-switcher {
+  background: linear-gradient(135deg, rgba(10, 42, 57, .81), rgba(8, 29, 47, .72)) !important;
+  border-color: rgba(255, 255, 255, .22) !important;
+}
+.glass-dashboard .dashboard h2,
+.glass-dashboard .dashboard h3,
+.glass-dashboard .dashboard .section-label,
+.glass-dashboard .stat-value,
+.glass-dashboard .panel-heading h3,
+.glass-dashboard .govt-map-heading h3,
+.glass-dashboard .ss-card h2,
+.glass-dashboard .ss-card h3,
+.glass-dashboard .data-table td { color: #f7fbff !important; }
+.glass-dashboard .dashboard-sub,
+.glass-dashboard .stat-label,
+.glass-dashboard .panel-heading p,
+.glass-dashboard .data-table th,
+.glass-dashboard .mail-status { color: rgba(229, 242, 248, .76) !important; }
+.glass-dashboard .form-input,
+.glass-dashboard .map-detail,
+.glass-dashboard .grid-track,
+.glass-dashboard .alert-card { background: rgba(255, 255, 255, .09) !important; }
+.glass-dashboard .connect-btn,
+.glass-dashboard .buy-btn { background: #aef6bd !important; color: #08212e !important; }
+
+/* Contrast guardrails for every dashboard content element. */
+.glass-dashboard .ss-content,
+.glass-dashboard .ss-content p,
+.glass-dashboard .ss-content span,
+.glass-dashboard .ss-content label,
+.glass-dashboard .ss-content li,
+.glass-dashboard .ss-content strong,
+.glass-dashboard .dashboard p,
+.glass-dashboard .dashboard span,
+.glass-dashboard .dashboard label,
+.glass-dashboard .dashboard li,
+.glass-dashboard .dashboard strong,
+.glass-dashboard .ss-page-head,
+.glass-dashboard .ss-page-head p { color: #eaf5f8 !important; }
+.glass-dashboard .ss-page-head h1,
+.glass-dashboard .ss-page-head h2,
+.glass-dashboard .ss-card h2,
+.glass-dashboard .ss-card h3,
+.glass-dashboard .ss-provider-title-row h2,
+.glass-dashboard .ss-provider-detail-head h1,
+.glass-dashboard .ss-action-card h3,
+.glass-dashboard .dashboard h2,
+.glass-dashboard .dashboard h3,
+.glass-dashboard .dashboard .section-label { color: #ffffff !important; }
+.glass-dashboard .ss-muted,
+.glass-dashboard .dashboard-sub,
+.glass-dashboard .stat-label,
+.glass-dashboard .ss-label,
+.glass-dashboard .ss-card .ss-muted,
+.glass-dashboard .ss-card .ss-label,
+.glass-dashboard .panel-heading p,
+.glass-dashboard .data-table th,
+.glass-dashboard .ss-table th { color: #c7dce4 !important; opacity: 1 !important; }
+.glass-dashboard .ss-positive,
+.glass-dashboard .ss-eyebrow,
+.glass-dashboard .ss-link-button,
+.glass-dashboard .stat-value.trust,
+.glass-dashboard .govt-map-heading .eyebrow { color: #baf8c7 !important; }
+.glass-dashboard .stat-value.solar { color: #ffe09a !important; }
+.glass-dashboard .stat-value.alert { color: #ffb7b7 !important; }
+.glass-dashboard .ss-content a:not(.ss-button),
+.glass-dashboard .dashboard a:not(.buy-btn):not(.connect-btn) { color: #c5fad1 !important; }
+.glass-dashboard .ss-content button:not(.ss-button):not(.connect-btn):not(.buy-btn),
+.glass-dashboard .dashboard button:not(.connect-btn):not(.buy-btn) { color: #f5fbfd; }
+.glass-dashboard .ss-button.primary,
+.glass-dashboard .connect-btn,
+.glass-dashboard .buy-btn,
+.glass-dashboard .govt-tabs button.active,
+.glass-dashboard .range-control button.active { color: #06202c !important; }
+.glass-dashboard .ss-button.secondary,
+.glass-dashboard .ss-small-button,
+.glass-dashboard .ss-icon-button,
+.glass-dashboard .scope-reset { color: #f7fbff !important; }
+.glass-dashboard .ss-text-input,
+.glass-dashboard .form-input { color: #f7fbff !important; background-color: rgba(3, 27, 42, .38) !important; }
+.glass-dashboard .ss-search input,
+.glass-dashboard .ss-filter-search input { color: #f7fbff !important; background: transparent !important; }
+.glass-dashboard .ss-text-input::placeholder,
+.glass-dashboard .form-input::placeholder,
+.glass-dashboard .ss-search input::placeholder { color: #b9d1da !important; opacity: 1; }
+
+/* Government controls and brand: override the original dashboard's scoped
+   white theme at the same elements, including inactive states. */
+#solarsettle-govt-dashboard.glass-dashboard .ss-brand,
+#solarsettle-govt-dashboard.glass-dashboard .ss-brand strong,
+#solarsettle-govt-dashboard.glass-dashboard .ss-brand span { color: #f7fbff !important; }
+#solarsettle-govt-dashboard.glass-dashboard .ss-brand span { color: #c7dce4 !important; }
+#solarsettle-govt-dashboard.glass-dashboard .ss-search,
+#solarsettle-govt-dashboard.glass-dashboard .ss-search input {
+  color: #f7fbff !important;
+  border-color: rgba(255, 255, 255, .24) !important;
+}
+#solarsettle-govt-dashboard.glass-dashboard .ss-search { background: rgba(4, 28, 44, .48) !important; }
+#solarsettle-govt-dashboard.glass-dashboard .ss-search input { background: transparent !important; }
+#solarsettle-govt-dashboard.glass-dashboard .govt-tabs,
+#solarsettle-govt-dashboard.glass-dashboard .range-control {
+  background: rgba(4, 27, 43, .7) !important;
+  border: 1px solid rgba(255, 255, 255, .2) !important;
+  box-shadow: 0 10px 28px rgba(1, 15, 24, .18) !important;
+}
+#solarsettle-govt-dashboard.glass-dashboard .govt-tabs button,
+#solarsettle-govt-dashboard.glass-dashboard .range-control button {
+  color: #d8e8ed !important;
+  background: transparent !important;
+}
+#solarsettle-govt-dashboard.glass-dashboard .govt-tabs button:hover,
+#solarsettle-govt-dashboard.glass-dashboard .range-control button:hover {
+  color: #ffffff !important;
+  background: rgba(174, 246, 189, .17) !important;
+}
+#solarsettle-govt-dashboard.glass-dashboard .govt-tabs button.active,
+#solarsettle-govt-dashboard.glass-dashboard .range-control button.active {
+  color: #06202c !important;
+  background: #aef6bd !important;
+}
+#solarsettle-govt-dashboard.glass-dashboard .control-label,
+#solarsettle-govt-dashboard.glass-dashboard .fraud-demo-kicker,
+#solarsettle-govt-dashboard.glass-dashboard .eyebrow { color: #baf8c7 !important; }
+#solarsettle-govt-dashboard.glass-dashboard .govt-controls strong,
+#solarsettle-govt-dashboard.glass-dashboard .panel-heading strong,
+#solarsettle-govt-dashboard.glass-dashboard .timeline-summary strong { color: #ffffff !important; }
+
+/* High-definition government map: retain the vector geometry, give it a
+   dedicated dark stage, and keep every map label legible. */
+#solarsettle-govt-dashboard.glass-dashboard .govt-map-heading h3 { color: #ffffff !important; }
+#solarsettle-govt-dashboard.glass-dashboard .govt-map-heading p:not(.eyebrow),
+#solarsettle-govt-dashboard.glass-dashboard .map-legend,
+#solarsettle-govt-dashboard.glass-dashboard .map-legend span,
+#solarsettle-govt-dashboard.glass-dashboard .heat-legend { color: #d9eaf0 !important; }
+#solarsettle-govt-dashboard.glass-dashboard .india-map-stage {
+  min-height: 470px;
+  grid-template-columns: minmax(420px, 1.12fr) minmax(310px, .88fr);
+  gap: 26px;
+  border: 1px solid rgba(255, 255, 255, .18) !important;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 37% 39%, rgba(119, 230, 163, .11), transparent 36%),
+    linear-gradient(135deg, rgba(8, 43, 60, .96), rgba(3, 26, 42, .94)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 14px 34px rgba(1, 15, 24, .22);
+}
+#solarsettle-govt-dashboard.glass-dashboard .india-map {
+  max-height: 520px;
+  min-height: 445px;
+  padding: 16px 18px;
+  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, .27));
+}
+#solarsettle-govt-dashboard.glass-dashboard .india-state { stroke: rgba(222, 244, 249, .85); stroke-width: 1.55; }
+#solarsettle-govt-dashboard.glass-dashboard .india-state.heat-0 { fill: #315264; }
+#solarsettle-govt-dashboard.glass-dashboard .india-state.heat-1 { fill: #3e9d6c; stroke: #aef6bd; }
+#solarsettle-govt-dashboard.glass-dashboard .india-state.heat-2 { fill: #80bc55; stroke: #d5ff9b; }
+#solarsettle-govt-dashboard.glass-dashboard .india-state.heat-3 { fill: #dfad42; stroke: #ffe4a1; }
+#solarsettle-govt-dashboard.glass-dashboard .india-state.heat-4 { fill: #df7945; stroke: #ffd1aa; }
+#solarsettle-govt-dashboard.glass-dashboard .india-state.heat-5 { fill: #d9535d; stroke: #ffc2c6; }
+#solarsettle-govt-dashboard.glass-dashboard .india-state:hover,
+#solarsettle-govt-dashboard.glass-dashboard .india-state:focus,
+#solarsettle-govt-dashboard.glass-dashboard .india-state.hovered { stroke: #ffffff; stroke-width: 3.2; filter: brightness(1.16) saturate(1.18); }
+#solarsettle-govt-dashboard.glass-dashboard .india-state.selected-state { stroke: #aef6bd; stroke-width: 4; filter: drop-shadow(0 0 7px rgba(174,246,189,.75)); }
+#solarsettle-govt-dashboard.glass-dashboard .map-marker { stroke: #effcff; stroke-width: 3.8; filter: drop-shadow(0 1px 3px rgba(0,0,0,.45)); }
+#solarsettle-govt-dashboard.glass-dashboard .map-marker.healthy { fill: #aef6bd; }
+#solarsettle-govt-dashboard.glass-dashboard .map-marker.waiting { fill: #ffe09a; }
+#solarsettle-govt-dashboard.glass-dashboard .map-marker.risk { fill: #ff9d9d; }
+#solarsettle-govt-dashboard.glass-dashboard .map-pulse.healthy { stroke: #aef6bd; }
+#solarsettle-govt-dashboard.glass-dashboard .map-pulse.waiting { stroke: #ffe09a; }
+#solarsettle-govt-dashboard.glass-dashboard .map-pulse.risk { stroke: #ff9d9d; }
+#solarsettle-govt-dashboard.glass-dashboard .map-detail {
+  min-height: 255px;
+  margin: 22px 24px 22px 0;
+  padding: 24px;
+  border: 1px solid rgba(174, 246, 189, .32) !important;
+  border-left: 4px solid #aef6bd !important;
+  border-radius: 12px;
+  background: rgba(2, 24, 39, .75) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
+}
+#solarsettle-govt-dashboard.glass-dashboard .map-detail strong { color: #ffffff !important; font-size: 15px; }
+#solarsettle-govt-dashboard.glass-dashboard .map-detail span,
+#solarsettle-govt-dashboard.glass-dashboard .map-detail small,
+#solarsettle-govt-dashboard.glass-dashboard .map-detail em { color: #dcecf1 !important; opacity: 1 !important; }
+#solarsettle-govt-dashboard.glass-dashboard .map-detail-kicker { color: #baf8c7 !important; }
+#solarsettle-govt-dashboard.glass-dashboard .map-detail em { color: #ffffff !important; }
+#solarsettle-govt-dashboard.glass-dashboard .map-detail.risk { border-left-color: #ff9d9d !important; background: rgba(66, 18, 29, .75) !important; }
+#solarsettle-govt-dashboard.glass-dashboard .map-detail.risk em,
+#solarsettle-govt-dashboard.glass-dashboard .risk-reason { color: #ffd0d0 !important; }
+#solarsettle-govt-dashboard.glass-dashboard .map-callout rect { fill: rgba(2, 24, 39, .97); stroke: rgba(174,246,189,.55); stroke-width: 1; }
+#solarsettle-govt-dashboard.glass-dashboard .map-callout text { fill: #ffffff; font-size: 10px; }
+#solarsettle-govt-dashboard.glass-dashboard .legend-dot.healthy { background: #aef6bd; }.glass-dashboard .legend-dot.waiting { background: #ffe09a; }.glass-dashboard .legend-dot.risk { background: #ff9d9d; }.glass-dashboard .legend-dot.neutral { background: #9ab7c4; }
+#solarsettle-govt-dashboard.glass-dashboard .heat-swatch { border-color: rgba(255,255,255,.3); }
+#solarsettle-govt-dashboard.glass-dashboard .heat-swatch.heat-low { background: #3e9d6c; }.glass-dashboard .heat-swatch.heat-mid { background: #dfad42; }.glass-dashboard .heat-swatch.heat-high { background: #d9535d; }
+#solarsettle-govt-dashboard.glass-dashboard .state-risk-list {
+  border-left-color: #ff9d9d !important;
+  background: rgba(108, 31, 45, .74) !important;
+}
+#solarsettle-govt-dashboard.glass-dashboard .state-risk-list strong { color: #ffffff !important; }
+#solarsettle-govt-dashboard.glass-dashboard .healthy-text { color: #0c3a22 !important; background: #baf8c7 !important; }
+#solarsettle-govt-dashboard.glass-dashboard .waiting-text { color: #4c3100 !important; background: #ffe09a !important; }
+#solarsettle-govt-dashboard.glass-dashboard .risk-text { color: #530d18 !important; background: #ffb7b7 !important; }
+
+/* Charts use SVG <text>, so CSS color rules do not apply to their labels. */
+.glass-dashboard svg text,
+.glass-dashboard .timeline-tooltip text,
+.glass-dashboard .timeline-label { fill: #ffffff !important; }
+.glass-dashboard .timeline-tooltip rect { fill: rgba(2, 24, 39, .94) !important; }
+.glass-dashboard .grid-track small,
+.glass-dashboard .grid-track-head span,
+.glass-dashboard .grid-track-head strong { color: #d8e8ed !important; opacity: 1 !important; }
+
+/* Registry and marketplace tables: eliminate all inherited light-row states. */
+#solarsettle-govt-dashboard.glass-dashboard .table-wrap,
+#solarsettle-govt-dashboard.glass-dashboard .data-table { background: rgba(3, 27, 42, .72) !important; }
+#solarsettle-govt-dashboard.glass-dashboard .data-table thead th {
+  color: #d9eef4 !important;
+  background: rgba(255, 255, 255, .1) !important;
+  border-color: rgba(255, 255, 255, .18) !important;
+}
+#solarsettle-govt-dashboard.glass-dashboard .data-table tbody tr:nth-child(n) td {
+  color: #f7fbff !important;
+  background: rgba(3, 27, 42, .68) !important;
+  border-color: rgba(255, 255, 255, .18) !important;
+}
+#solarsettle-govt-dashboard.glass-dashboard .data-table tbody tr:nth-child(even) td { background: rgba(15, 52, 68, .72) !important; }
+#solarsettle-govt-dashboard.glass-dashboard .data-table tbody tr:hover td { background: rgba(174, 246, 189, .15) !important; }
+#solarsettle-govt-dashboard.glass-dashboard .data-table .mono,
+#solarsettle-govt-dashboard.glass-dashboard .data-table strong { color: #ffffff !important; }
+#solarsettle-govt-dashboard.glass-dashboard .demo-tag { color: #4b3502 !important; background: #ffe09a !important; }
+#solarsettle-govt-dashboard.glass-dashboard .status-pill.active { color: #0c3a22 !important; background: #baf8c7 !important; }
+#solarsettle-govt-dashboard.glass-dashboard .status-pill.alert { color: #530d18 !important; background: #ffb7b7 !important; }
+#solarsettle-govt-dashboard.glass-dashboard .status-pill.pending { color: #4c3100 !important; background: #ffe09a !important; }
+#solarsettle-govt-dashboard.glass-dashboard .data-table button { color: #ffb7b7 !important; }
+@media (max-width: 900px) { #solarsettle-govt-dashboard.glass-dashboard .india-map-stage { grid-template-columns: 1fr; }.glass-dashboard .map-detail { margin: 0 18px 20px; }.glass-dashboard .india-map { min-height: 350px; max-height: 440px; } }
+
+/* Final accessibility pass: all dashboard content is rendered on dark glass,
+   so establish one dependable readable foreground baseline everywhere. */
+.glass-dashboard .ss-content,
+.glass-dashboard .dashboard,
+.glass-dashboard .ss-card,
+.glass-dashboard .panel-form,
+.glass-dashboard .table-wrap,
+.glass-dashboard .govt-map-panel,
+.glass-dashboard .govt-controls,
+.glass-dashboard .grid-health-panel,
+.glass-dashboard .alert-center,
+.glass-dashboard .fraud-demo-panel,
+.glass-dashboard .ss-action-card,
+.glass-dashboard .ss-provider-card,
+.glass-dashboard .ss-filters,
+.glass-dashboard .ss-provider-detail-head,
+.glass-dashboard .ss-provider-switcher { color: #eaf5f8 !important; }
+.glass-dashboard .ss-content :is(p, span, label, li, td, dd, dt, small),
+.glass-dashboard .dashboard :is(p, span, label, li, td, dd, dt, small) { color: #d8e8ed !important; opacity: 1 !important; }
+.glass-dashboard .ss-content :is(h1, h2, h3, h4, strong, b),
+.glass-dashboard .dashboard :is(h1, h2, h3, h4, strong, b) { color: #ffffff !important; }
+.glass-dashboard .ss-content :is(input, select, textarea),
+.glass-dashboard .dashboard :is(input, select, textarea) { color: #f7fbff !important; background-color: rgba(3, 27, 42, .48) !important; border-color: rgba(255,255,255,.25) !important; }
+.glass-dashboard .ss-search input,
+.glass-dashboard .ss-filter-search input { background: transparent !important; }
+.glass-dashboard select option { color: #f7fbff; background: #082433; }
+.glass-dashboard .demo-banner { color: #ffe4ad !important; background: rgba(102, 67, 20, .76) !important; border-color: rgba(255, 220, 150, .4) !important; }
+.glass-dashboard .demo-banner :is(strong, span, p) { color: #ffe9bd !important; }
+.glass-dashboard .status-pill.active { color: #0b3a20 !important; background: #baf8c7 !important; }
+.glass-dashboard .status-pill.alert { color: #53121d !important; background: #ffb7b7 !important; }
+.glass-dashboard .status-pill.pending { color: #523700 !important; background: #ffe09a !important; }
+.glass-dashboard .demo-tag { color: #4b3502 !important; background: #ffe09a !important; }
+.glass-dashboard .ss-button.primary,
+.glass-dashboard .connect-btn,
+.glass-dashboard .buy-btn { color: #06202c !important; background: #aef6bd !important; }
+.glass-dashboard .ss-button.secondary,
+.glass-dashboard .ss-small-button,
+.glass-dashboard .ss-icon-button,
+.glass-dashboard .nav-btn,
+.glass-dashboard .scope-reset { color: #ffffff !important; background-color: rgba(255,255,255,.11) !important; border-color: rgba(255,255,255,.23) !important; }
+.glass-dashboard .ss-content a:not(.ss-button),
+.glass-dashboard .dashboard a:not(.ss-button) { color: #baf8c7 !important; }
+.glass-dashboard .ss-content [style*="color: var(--ss-red)"],
+.glass-dashboard .dashboard [style*="color: var(--ss-red)"] { color: #ffb7b7 !important; }
+.glass-dashboard .ss-content [style*="color: var(--ss-orange)"],
+.glass-dashboard .dashboard [style*="color: var(--ss-orange)"] { color: #ffe09a !important; }
+.glass-dashboard .ss-content [style*="color: var(--ss-primary)"],
+.glass-dashboard .dashboard [style*="color: var(--ss-primary)"],
+.glass-dashboard .ss-content [style*="color: var(--ss-green)"],
+.glass-dashboard .dashboard [style*="color: var(--ss-green)"] { color: #baf8c7 !important; }
+
+/* Alert count has a light mint surface, therefore it needs dark foreground text. */
+#solarsettle-govt-dashboard.glass-dashboard .alert-count {
+  color: #082c20 !important;
+  background: #baf8c7 !important;
+  border: 1px solid rgba(255,255,255,.45) !important;
+}
+
+/* Buyer provider view: these are layout wrappers, not content cards. */
+#solarsettle-buyer-dashboard.glass-dashboard .ss-provider-detail-head,
+#solarsettle-buyer-dashboard.glass-dashboard .ss-provider-switcher {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+#solarsettle-buyer-dashboard.glass-dashboard .ss-provider-switcher { padding-left: 0; padding-right: 0; }

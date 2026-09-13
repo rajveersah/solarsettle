@@ -8,6 +8,7 @@ import { PROVIDERS } from './BuyerDashboard';
 import { sendAlertEmail } from '../../lib/alertMailer';
 import './BuyerDashboard.css';
 import './DashboardTheme.css';
+import './GlassDashboard.css';
 
 const INACTIVITY_WINDOW_DAYS = 7;
 const DAY_MS = 24 * 3600 * 1000;
@@ -244,7 +245,11 @@ export default function GovtDashboard() {
   ], [displayProsumers, pendingList]);
 
   return (
-    <div id="solarsettle-govt-dashboard" className="ss-app buyer-theme govt-shell">
+    <div
+      id="solarsettle-govt-dashboard"
+      className="ss-app buyer-theme govt-shell glass-dashboard"
+      style={{ '--ss-dashboard-image': `url(${process.env.PUBLIC_URL}/solarsettle-hero.png)` }}
+    >
       <aside className="ss-sidebar">
         <Link to="/" className="ss-brand" style={{ textDecoration: 'none', color: 'inherit' }}><div className="ss-brand-mark">☀</div><div><strong>SolarSettle</strong><span>Clean energy. Trusted together.</span></div></Link>
         <nav className="ss-nav" aria-label="Government navigation">
@@ -259,12 +264,12 @@ export default function GovtDashboard() {
       <main className="ss-main">
         <header className="ss-header"><div className="ss-search"><span>⌕</span><input aria-label="Search monitored accounts" placeholder="Search wallets, subsidy IDs, locations..." /></div><div className="ss-header-actions"><button className="ss-icon-button" aria-label="Alerts">●</button><button className="ss-avatar" aria-label="Government profile">GV</button></div></header>
         <div className="ss-content"><div className="dashboard govt-dashboard">
-        <h2>🏛️ Government Dashboard</h2>
+        <h2>Government Dashboard</h2>
         <p className="dashboard-sub">Role: Government. {isWalletConnected ? ('Connected: ' + short(account)) : 'Presentation preview with sample registry data.'}</p>
 
         {!isWalletConnected && (
           <div className="panel-form">
-            <h3>🔌 Connect MetaMask to interact with the blockchain</h3>
+            <h3>Connect MetaMask to interact with the blockchain</h3>
             <p className="dashboard-sub">Approvals, penalties, and monitoring require a connected wallet.</p>
             <button className="connect-btn" onClick={connectWallet} disabled={connecting}>
               {connecting ? 'Connecting...' : 'Connect MetaMask'}
@@ -344,14 +349,14 @@ export default function GovtDashboard() {
         />}
 
         {activeTab === 'registry' && <>
-        <h3 className="section-label" style={{ marginTop: 30 }}>📝 Registration approvals</h3>
+        <h3 className="section-label" style={{ marginTop: 30 }}>Registration approvals</h3>
         {!contract ? <p className="dashboard-sub">Connect a wallet to view approvals.</p> : filteredPending.length === 0 ? <p className="dashboard-sub">No pending registrations in this scope.</p> : (
           <div className="table-wrap"><table className="data-table"><thead><tr><th>Wallet</th><th>Subsidy ID</th><th>Location</th><th>Capacity</th><th></th></tr></thead><tbody>
             {filteredPending.map((r) => (<tr key={r.address}><td className="mono">{short(r.address)}</td><td className="mono">{r.subsidyID}</td><td>{r.location}</td><td>{r.capacityKw} kW</td><td><button className="buy-btn" style={{ width: 'auto', margin: 0 }} onClick={() => handleApprove(r.address)} disabled={pending}>{demoMode ? 'Approve sample' : pending ? 'Confirming...' : 'Approve'}</button></td></tr>))}
           </tbody></table></div>
         )}
 
-        <h3 className="section-label" style={{ marginTop: 30 }}>📍 Registered prosumers — live monitoring</h3>
+        <h3 className="section-label" style={{ marginTop: 30 }}>Registered prosumers — live monitoring</h3>
         {filteredProsumers.length === 0 ? <p className="dashboard-sub">No approved prosumers in this scope.</p> : (
           <div className="table-wrap"><table className="data-table"><thead><tr><th>Wallet</th><th>Subsidy ID</th><th>Location</th><th>Capacity</th><th>Trust</th><th>Generated</th><th>Last Reading</th><th>Risk Signal</th><th>Status</th><th></th></tr></thead><tbody>
             {filteredProsumers.map((p) => (
