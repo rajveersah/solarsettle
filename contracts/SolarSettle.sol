@@ -7,7 +7,7 @@ pragma solidity ^0.8.28;
  */
 contract SolarSettle {
     // ------------------------------------------------------------------
-    // Parameters
+    // State
     // ------------------------------------------------------------------
     address public owner;
     bool public paused;
@@ -54,11 +54,11 @@ contract SolarSettle {
     // Trusted-reader registry (demo preserves self-submission, production
     // gates readings to the owner / a registered panel's authorized reader).
     // ------------------------------------------------------------------
-    /// @notice Anyone may submit a reading on behalf of an unregistered
-    ///         prosumer's own wallet (demo self-submission). Once a reader is
-    ///         registered for a prosumer, only that reader (or the owner) may
-    ///         submit. `isTrustedReader` answers "may this reader submit for
-    ///         this prosumer?".
+    // `authorizedReaderFor` maps a prosumer address to the wallet authorized
+    // to submit readings on their behalf. The contract owner is always trusted
+    // for every prosumer; until a reader is set, the prosumer's own wallet may
+    // submit (demo / onboarding). `isTrustedReader` answers "may this reader
+    // submit for this prosumer?".
     mapping(address => address) public authorizedReaderFor;
 
     // ------------------------------------------------------------------
@@ -108,13 +108,16 @@ contract SolarSettle {
     ///         to submit (self-submission) until a reader is set.
     /// @return The authorized reader for `prosumer`, or address(0).
     function isTrustedReader(address prosumer, address reader) public view returns (bool) {
-        // The owner is trusted for every prosumer.
+        // The contract owner (regulator / government) is trusted for every panel.
         if (reader == owner) return true;
-        // A specific reader registered for this prosumer is trusted.
-        if (authorizedReaderFor[prosumer] == reader) return true;
-        // Until a reader is registered, the prosumer's own wallet may submit
-        // (demos / onboarding). Once a reader is set, only it may submit.
-        return prosumers[prosumer].registered == false && reader == prosumer;
+        // If a dedicated reader has been registered for this prosumer, only that
+        // reader (or the owner via the check above) may submit readings.
+        if (authorizedReaderFor[prosumer] != address(0)) {
+            return authorizedReaderFor[prosumer] == reader;
+        }
+        // No reader has been assigned yet — the panel's own wallet may submit
+        // (demo self-submission / onboarding) until an external reader is set.
+        return reader == prosumer;
     }
 
     function setAuthorizedReader(address prosumer, address reader) external onlyOwner whenNotPaused {
@@ -209,8 +212,10 @@ contract SolarSettle {
     // ------------------------------------------------------------------
     // Energy logging & trust score
     // ------------------------------------------------------------------
-    function logEnergyGeneration(uint256 kWh) external onlyRegistered whenNotPaused {
+    function logEnergyGeneration(uint256 kWh) external onlyRegistered whenNotPaused nonReentrant {
         Prosumer storage p = prosumers[msg.sender];
+
+        require(isTrustedReader(msg.sender, msg.sender), "Not an authorized reader for this panel");
 
         // Sanity check: a single reading cannot exceed what the panel could
         // physically produce in a day at peak output. Absurd readings are

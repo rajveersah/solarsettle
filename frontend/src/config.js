@@ -1,36 +1,32 @@
-import deployed from './deployedAddress.json';
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+export const MST_CHAIN_ID = 91562037;
 
-export const CONTRACT_ADDRESS = deployed.address;
-export const CONTRACT_CHAIN_ID = deployed.chainId;
-
-/** True once `scripts/deploy.ts` has written a real address. */
-export const isContractConfigured = () =>
-  typeof CONTRACT_ADDRESS === 'string' && CONTRACT_ADDRESS.startsWith('0x') &&
-  CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000';
-
-/** Chain metadata for networks this product ships with. */
 export const CHAINS = {
-  31337: {
-    chainIdHex: '0x7a69',
-    chainName: 'Hardhat Local',
-    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-    rpcUrls: ['http://127.0.0.1:8545'],
+  [MST_CHAIN_ID]: {
+    chainId: MST_CHAIN_ID,
+    key: 'mst',
+    label: 'MST Testnet',
+    chainIdHex: '0x5752035',
+    chainName: 'MST Testnet',
+    nativeCurrency: { name: 'MST', symbol: 'MST', decimals: 18 },
+    rpcUrls: ['https://testnetrpc.mstblockchain.com'],
     blockExplorerUrls: [],
-  },
-  80002: {
-    chainIdHex: '0x13882',
-    chainName: 'Polygon Amoy Testnet',
-    nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-    rpcUrls: ['https://polygon-amoy-bor-rpc.publicnode.com'],
-    blockExplorerUrls: ['https://amoy.polygonscan.com'],
-  },
-  10143: {
-    chainIdHex: '0x279f',
-    chainName: 'Monad Testnet',
-    nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
-    rpcUrls: ['https://testnet-rpc.monad.xyz'],
-    blockExplorerUrls: ['https://testnet.monadexplorer.com'],
+    address: process.env.REACT_APP_MST_CONTRACT_ADDRESS || ZERO_ADDRESS,
   },
 };
 
+export const CONTRACT_CHAIN_ID = MST_CHAIN_ID;
+export const CONTRACT_ADDRESS = CHAINS[CONTRACT_CHAIN_ID]?.address || ZERO_ADDRESS;
+
+/** True once `scripts/deploy.ts` has written a real address. */
+export const isContractConfigured = () =>
+  isAddressConfigured(CONTRACT_ADDRESS);
+
+export const isAddressConfigured = (address) =>
+  typeof address === 'string' && /^0x[a-fA-F0-9]{40}$/.test(address) && address !== ZERO_ADDRESS;
+
 export const getChain = (chainId) => CHAINS[Number(chainId)] || null;
+export const getConfiguredChain = (chainId) => {
+  const chain = getChain(chainId);
+  return chain && isAddressConfigured(chain.address) ? chain : null;
+};

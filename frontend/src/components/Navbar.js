@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useWeb3 } from '../context/Web3Context';
 
 export default function Navbar({ links = [] }) {
-  const { selectedRole, isWalletConnected, account, logout, error, setError } = useWeb3();
+  const { selectedRole, isWalletConnected, account, logout, error, setError, supportedChains, targetChainId, selectNetwork, connectWallet, connecting, chain } = useWeb3();
   const location = useLocation();
   const short = (a) => a ? (a.slice(0, 6) + '...' + a.slice(-4)) : '';
   const roleLabel = selectedRole === 'government' ? 'Govt' : selectedRole === 'prosumer' ? 'Prosumer' : 'Buyer';
@@ -37,6 +37,29 @@ export default function Navbar({ links = [] }) {
           <span className="wallet-pill" title={account}>
             <span className="wallet-dot"></span>
             {short(account)}
+          </span>
+        )}
+        <select
+          className="nav-btn network-select"
+          value={targetChainId}
+          onChange={(event) => selectNetwork(Number(event.target.value))}
+          aria-label="Blockchain network"
+        >
+          {supportedChains.map((network) => (
+            <option key={network.key} value={network.chainId}>
+              {network.label}
+            </option>
+          ))}
+        </select>
+        {!isWalletConnected && (
+          <button className="nav-btn connect-nav-btn" onClick={() => connectWallet(targetChainId)} disabled={connecting}>
+            {connecting ? 'Connecting...' : 'Connect MetaMask'}
+          </button>
+        )}
+        {isWalletConnected && chain && (
+          <span className="wallet-pill" title={chain.chainName}>
+            <span className="wallet-dot"></span>
+            {chain.label}
           </span>
         )}
         {selectedRole && (

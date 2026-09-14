@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import abiJson from '../SolarSettleABI.json';
-import { CONTRACT_ADDRESS, getChain, isContractConfigured } from '../config';
+import { CONTRACT_ADDRESS, CONTRACT_CHAIN_ID, getChain, isContractConfigured } from '../config';
 
 export const CONTRACT_ABI = abiJson.abi;
 
@@ -9,6 +9,22 @@ let chainMeta = null;
 /** Configure the read-only provider's chain (called from the landing page). */
 export function setDeployedChainId(id) {
   chainMeta = getChain(id);
+}
+
+/** Build an on-chain explorer URL for a transaction or block (if one is configured for the deployed chain). */
+export function explorerUrl(type, hashOrNumber) {
+  const chain = getChain(CONTRACT_CHAIN_ID);
+  if (!chain?.blockExplorerUrls?.length) return null;
+  const base = chain.blockExplorerUrls[0];
+  if (base == null || base === '') return null;
+  // Handle the common {address} / {txHash} / {blockHash} placeholder forms.
+  if (type === 'tx') {
+    return base.replace('{txHash}', hashOrNumber).replace('{hash}', hashOrNumber);
+  }
+  if (type === 'block') {
+    return base.replace('{blockHash}', hashOrNumber).replace('{block}', hashOrNumber);
+  }
+  return base;
 }
 
 /** Read-only provider for public pages (landing) — no wallet required. */

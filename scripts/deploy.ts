@@ -36,6 +36,15 @@ async function main() {
   );
   console.log("📝 Frontend address synced at:", outPath);
 
+  if (Number(chainId) === 91562037) {
+    const frontendEnvPath = path.resolve(__dirname, "../frontend/.env.production");
+    fs.writeFileSync(
+      frontendEnvPath,
+      `REACT_APP_MST_CONTRACT_ADDRESS=${address}\n`
+    );
+    console.log("📝 Frontend production environment synced at:", frontendEnvPath);
+  }
+
   const abiPath = path.resolve(__dirname, "../artifacts/contracts/SolarSettle.sol/SolarSettle.json");
   const artifact = JSON.parse(fs.readFileSync(abiPath, "utf8"));
   fs.writeFileSync(

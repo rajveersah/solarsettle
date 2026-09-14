@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: solarsettle
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_MST_CONTRACT_ADDRESS
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

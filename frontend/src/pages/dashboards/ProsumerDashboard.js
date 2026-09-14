@@ -37,7 +37,7 @@ const simulatedHistory = () => Array.from({ length: 12 }, (_, index) => {
 });
 
 export default function ProsumerDashboard() {
-  const { isWalletConnected, account, contract, readProvider, connectWallet, connecting, logout } = useWeb3();
+  const { isWalletConnected, account, contract, readProvider, connectWallet, connecting, logout, error } = useWeb3();
   const { pending, toast, run, setToast } = useTx();
 
   const [profile, setProfile] = useState(null);
@@ -164,7 +164,9 @@ export default function ProsumerDashboard() {
       setToast({ kind: 'err', text: 'Capacity must be between 0.1 kW and 1000 kW.' });
       return;
     }
-    const ok = await run(() => contract.registerProsumer(form.subsidyId.trim(), capacityW, form.location.trim()), 'Registration submitted — awaiting government approval.');
+    const wallet = contract ? { contract } : await connectWallet();
+    if (!wallet?.contract) return;
+    const ok = await run(() => wallet.contract.registerProsumer(form.subsidyId.trim(), capacityW, form.location.trim()), 'Registration submitted — awaiting government approval.');
     if (ok) { setForm({ subsidyId: '', capacityKw: '', location: '' }); await loadProfile(); }
   };
 
@@ -311,7 +313,7 @@ return (
               </div>
             )}
 
-            {profile && !profile.registered && !demoMode && (
+            {profile && (!isWalletConnected || (!profile.registered && !demoMode)) && (
               <div className="ss-card" style={{ marginBottom: '24px' }}>
                 <div className="ss-card-head">
                   <div><span className="ss-label">Getting started</span><h2>Register your solar panel</h2></div>
@@ -327,7 +329,7 @@ return (
                       <input className="ss-text-input" aria-label="Subsidy ID" placeholder="Subsidy ID (e.g. PMKUSUM-2024-0142)" value={form.subsidyId} onChange={(e) => setForm({ ...form, subsidyId: e.target.value })} style={{ flex: 1 }} />
                       <input className="ss-text-input" aria-label="Capacity in kW" type="number" step="0.1" min="0.1" max="1000" placeholder="Capacity (kW)" value={form.capacityKw} onChange={(e) => setForm({ ...form, capacityKw: e.target.value })} style={{ flex: 1, minWidth: '100px' }} />
                       <input className="ss-text-input" aria-label="Location" placeholder="Location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} style={{ flex: 1 }} />
-                      <button type="submit" className="ss-button primary" disabled={pending}>{pending ? '...' : 'Register'}</button>
+                      <button type="submit" className="ss-button primary" disabled={pending}>{pending ? 'Waiting for MetaMask...' : 'Register on Blockchain'}</button>
                     </form>
                   </>
                 )}
@@ -596,6 +598,7 @@ return (
                   <div><span className="ss-label">Blockchain</span><h2>Go live with MetaMask</h2></div>
                 </div>
                 <p style={{ color: 'var(--ss-muted)', fontSize: '13px', marginTop: 0, marginBottom: '16px' }}>Connect your wallet to register, log real readings, and trade on the marketplace.</p>
+                {error && <p role="alert" style={{ color: 'var(--ss-red)', fontSize: '13px', marginTop: 0 }}>{error}</p>}
                 <button className="ss-button primary" onClick={connectWallet} disabled={connecting}>{connecting ? 'Connecting...' : 'Connect MetaMask'}</button>
               </div>
             )}

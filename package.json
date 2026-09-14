@@ -9,7 +9,9 @@
     "node": "hardhat node",
     "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
     "seed:local": "hardhat run scripts/seedDemo.ts --network localhost",
-    "deploy:amoy": "hardhat run scripts/deploy.ts --network amoy"
+    "deploy:amoy": "hardhat run scripts/deploy.ts --network amoy",
+    "deploy:monad": "hardhat run scripts/deploy.ts --network monadTestnet",
+    "deploy:mst": "hardhat run scripts/deploy.ts --network mstTestnet"
   },
   "repository": {
     "type": "git",

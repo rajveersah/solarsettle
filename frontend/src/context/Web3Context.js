@@ -1,10 +1,16 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { ethers } from 'ethers';
 import abiJson from '../SolarSettleABI.json';
-import { CONTRACT_ADDRESS, CONTRACT_CHAIN_ID, getChain, isContractConfigured } from '../config';
+import { CHAINS, CONTRACT_CHAIN_ID, getChain, getConfiguredChain, isAddressConfigured } from '../config';
 
 const CONTRACT_ABI = abiJson.abi;
 const ROLE_STORAGE_KEY = 'solarsettle.role';
+
+const getInjectedProvider = () => {
+  if (typeof window === 'undefined') return null;
+  const providers = window.ethereum?.providers;
+  return providers?.find((provider) => provider.isMetaMask) || window.ethereum || null;
+};
 
 const Web3Context = createContext(null);
 export const useWeb3 = () => useContext(Web3Context);
@@ -30,59 +36,76 @@ export function Web3Provider({ children }) {
   const [contract, setContract] = useState(null);
   const [readProvider, setReadProvider] = useState(null);
   const [chainId, setChainId] = useState(null);
+  const [targetChainId, setTargetChainId] = useState(CONTRACT_CHAIN_ID);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState('');
-  const configured = isContractConfigured();
-  const walletAvailable = typeof window !== 'undefined' && !!window.ethereum;
+  const targetChain = getChain(targetChainId);
+  const configured = !!targetChain && isAddressConfigured(targetChain.address);
+  const walletProvider = getInjectedProvider();
+  const walletAvailable = !!walletProvider;
 
-  const switchNetwork = async () => {
-    const chain = getChain(CONTRACT_CHAIN_ID);
+  const switchNetwork = useCallback(async (chainIdToUse = targetChainId) => {
+    const chain = getChain(chainIdToUse);
     if (!chain) throw new Error('No chain metadata for chainId ' + CONTRACT_CHAIN_ID);
 
     try {
-      await window.ethereum.request({
+      await walletProvider.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: chain.chainIdHex }],
       });
     } catch (switchErr) {
       if (switchErr.code === 4902 || switchErr.data?.originalError?.code === 4902) {
-        await window.ethereum.request({
+        const networkParams = {
+          chainId: chain.chainIdHex,
+          chainName: chain.chainName,
+          nativeCurrency: chain.nativeCurrency,
+          rpcUrls: chain.rpcUrls.filter(Boolean),
+        };
+        if (chain.blockExplorerUrls?.length) {
+          networkParams.blockExplorerUrls = chain.blockExplorerUrls.filter(Boolean);
+        }
+        await walletProvider.request({
           method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: chain.chainIdHex,
-            chainName: chain.chainName,
-            nativeCurrency: chain.nativeCurrency,
-            rpcUrls: chain.rpcUrls,
-            blockExplorerUrls: chain.blockExplorerUrls,
-          }],
+          params: [networkParams],
         });
       } else {
         throw switchErr;
       }
     }
-  };
+  }, [targetChainId, walletProvider]);
 
-  const bindWallet = useCallback(async (requestedAccounts) => {
-    if (!walletAvailable || !configured || !requestedAccounts?.length) return null;
+  const bindWallet = useCallback(async (requestedAccounts, requestedChainId = targetChainId) => {
+    if (!walletAvailable || !requestedAccounts?.length) return null;
+    const chain = getChain(requestedChainId);
+    if (!chain) throw new Error('Unknown blockchain network ' + requestedChainId + '.');
 
-    const provider = new ethers.BrowserProvider(window.ethereum);
+    const provider = new ethers.BrowserProvider(walletProvider);
     const net = await provider.getNetwork();
-    if (Number(net.chainId) !== CONTRACT_CHAIN_ID) {
-      await switchNetwork();
+    if (Number(net.chainId) !== requestedChainId) {
+      await switchNetwork(requestedChainId);
     }
 
-    const refreshedProvider = new ethers.BrowserProvider(window.ethereum);
+    const refreshedProvider = new ethers.BrowserProvider(walletProvider);
+    const finalNet = await refreshedProvider.getNetwork();
+    if (Number(finalNet.chainId) !== requestedChainId) {
+      throw new Error('MetaMask is on chain ' + finalNet.chainId + '; switch to ' + requestedChainId + ' and try again.');
+    }
     const signer = await refreshedProvider.getSigner();
     const signerAddress = await signer.getAddress();
-    const instance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-    const finalNet = await refreshedProvider.getNetwork();
+    const instance = isAddressConfigured(chain.address)
+      ? new ethers.Contract(chain.address, CONTRACT_ABI, signer)
+      : null;
 
     setAccount(signerAddress);
     setContract(instance);
     setReadProvider(refreshedProvider);
     setChainId(Number(finalNet.chainId));
-    return { address: signerAddress };
-  }, [configured, walletAvailable]);
+    setTargetChainId(requestedChainId);
+    if (!instance) {
+      setError(chain.label + ' wallet connected. Deploy SolarSettle there before sending transactions.');
+    }
+    return { address: signerAddress, chainId: requestedChainId, contract: instance };
+  }, [switchNetwork, targetChainId, walletAvailable, walletProvider]);
 
   const loginAs = useCallback((role) => {
     setSelectedRole(role);
@@ -93,28 +116,66 @@ export function Web3Provider({ children }) {
     }
   }, []);
 
-  const connectWallet = useCallback(async () => {
+  const connectWallet = useCallback(async (requestedChainId = targetChainId) => {
+    const chainIdToUse = typeof requestedChainId === 'number' ? requestedChainId : targetChainId;
+    const requestedChain = getChain(chainIdToUse);
     if (!walletAvailable) {
       setError('MetaMask is not installed.');
       return null;
     }
-    if (!configured) {
-      setError('Contract not deployed yet. Run `npm run deploy:local` first.');
+    if (!requestedChain) {
+      setError('Unknown blockchain network ' + chainIdToUse + '.');
       return null;
     }
 
     setConnecting(true);
     setError('');
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      return await bindWallet(accounts);
+      try {
+        await walletProvider.request({
+          method: 'wallet_requestPermissions',
+          params: [{ eth_accounts: {} }],
+        });
+      } catch (permissionError) {
+        if (permissionError?.code === 4001) throw permissionError;
+      }
+      const accounts = await walletProvider.request({ method: 'eth_requestAccounts' });
+      setTargetChainId(chainIdToUse);
+      return await bindWallet(accounts, chainIdToUse);
     } catch (e) {
       setError(e.code === 4001 ? 'Connection rejected in MetaMask.' : 'Connect failed: ' + (e.shortMessage || e.message));
       return null;
     } finally {
       setConnecting(false);
     }
-  }, [bindWallet, configured, walletAvailable]);
+  }, [bindWallet, targetChainId, walletAvailable, walletProvider]);
+
+  const selectNetwork = useCallback(async (requestedChainId) => {
+    const nextChain = getConfiguredChain(requestedChainId);
+    if (!nextChain) {
+      const chain = getChain(requestedChainId);
+      if (!chain) {
+        setError('Unknown blockchain network.');
+        return null;
+      }
+      try {
+        await switchNetwork(requestedChainId);
+        setTargetChainId(requestedChainId);
+        setAccount(null);
+        setContract(null);
+        setReadProvider(null);
+        setChainId(requestedChainId);
+        setError(chain.label + ' selected. Deploy SolarSettle there before sending contract transactions.');
+        return { chainId: requestedChainId };
+      } catch (e) {
+        setError(e.code === 4001 ? 'Network switch rejected in MetaMask.' : 'Network switch failed: ' + (e.shortMessage || e.message));
+        return null;
+      }
+    }
+    setTargetChainId(requestedChainId);
+    if (!account) return { chainId: requestedChainId };
+    return connectWallet(requestedChainId);
+  }, [account, connectWallet, switchNetwork]);
 
   const logout = useCallback(() => {
     setSelectedRole(null);
@@ -134,14 +195,14 @@ export function Web3Provider({ children }) {
     if (!walletAvailable || !configured) return undefined;
     let mounted = true;
 
-    window.ethereum.request({ method: 'eth_accounts' })
+    walletProvider.request({ method: 'eth_accounts' })
       .then((accounts) => {
-        if (mounted && accounts?.length) bindWallet(accounts).catch(() => {});
+        if (mounted && accounts?.length) bindWallet(accounts, targetChainId).catch(() => {});
       })
       .catch(() => {});
 
     return () => { mounted = false; };
-  }, [bindWallet, configured, walletAvailable]);
+  }, [bindWallet, configured, targetChainId, walletAvailable, walletProvider]);
 
   useEffect(() => {
     if (!walletAvailable) return undefined;
@@ -152,7 +213,7 @@ export function Web3Provider({ children }) {
         setContract(null);
         return;
       }
-      bindWallet(accounts).catch((e) => setError('Wallet refresh failed: ' + (e.shortMessage || e.message)));
+      bindWallet(accounts, chainId || targetChainId).catch((e) => setError('Wallet refresh failed: ' + (e.shortMessage || e.message)));
     };
 
     const onChainChanged = () => {
@@ -163,16 +224,16 @@ export function Web3Provider({ children }) {
       setError('Network changed. Reconnect MetaMask to continue.');
     };
 
-    window.ethereum.on?.('accountsChanged', onAccountsChanged);
-    window.ethereum.on?.('chainChanged', onChainChanged);
+    walletProvider.on?.('accountsChanged', onAccountsChanged);
+    walletProvider.on?.('chainChanged', onChainChanged);
     return () => {
-      window.ethereum.removeListener?.('accountsChanged', onAccountsChanged);
-      window.ethereum.removeListener?.('chainChanged', onChainChanged);
+      walletProvider.removeListener?.('accountsChanged', onAccountsChanged);
+      walletProvider.removeListener?.('chainChanged', onChainChanged);
     };
-  }, [bindWallet, walletAvailable]);
+  }, [bindWallet, chainId, targetChainId, walletAvailable, walletProvider]);
 
   const isWalletConnected = !!account;
-  const chain = getChain(chainId || CONTRACT_CHAIN_ID);
+  const chain = getChain(chainId || targetChainId);
 
   const value = {
     selectedRole,
@@ -183,13 +244,16 @@ export function Web3Provider({ children }) {
     contract,
     readProvider,
     chainId,
+    targetChainId,
     chain,
+    supportedChains: Object.values(CHAINS),
     connecting,
     error,
     configured,
     walletAvailable,
     setError,
     connectWallet,
+    selectNetwork,
     contractAbi: CONTRACT_ABI,
   };
 
