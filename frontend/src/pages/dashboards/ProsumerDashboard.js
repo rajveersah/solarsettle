@@ -29,6 +29,12 @@ const DEMO_LISTINGS = [
 const fmt = (n) => (n || 0).toLocaleString('en-IN');
 const short = (a) => a ? (a.slice(0, 6) + '...' + a.slice(-4)) : '';
 const revenueTotal = (settlements) => (settlements?.totalRevenue || 0);
+const simulatedHistory = () => Array.from({ length: 12 }, (_, index) => {
+  const sample = new Date();
+  sample.setDate(sample.getDate() - (11 - index));
+  sample.setHours(13, 0, 0, 0);
+  return generateReading({ date: sample });
+});
 
 export default function ProsumerDashboard() {
   const { isWalletConnected, account, contract, readProvider, connectWallet, connecting, logout } = useWeb3();
@@ -36,7 +42,7 @@ export default function ProsumerDashboard() {
 
   const [profile, setProfile] = useState(null);
   const [liveReading, setLiveReading] = useState(() => generateReading());
-  const [readingHistory, setReadingHistory] = useState(() => Array.from({ length: 12 }, () => generateReading()));
+  const [readingHistory, setReadingHistory] = useState(simulatedHistory);
   const [form, setForm] = useState({ subsidyId: '', capacityKw: '', location: '' });
   const [listForm, setListForm] = useState({ kwh: '', price: '' });
   const [demoMode, setDemoMode] = useState(false);

@@ -9,6 +9,7 @@ contract SolarSettle {
     // ------------------------------------------------------------------
     // Parameters
     // ------------------------------------------------------------------
+    address public owner;
     bool public paused;
 
     uint256 public constant INITIAL_TRUST_SCORE = 70;
@@ -116,7 +117,7 @@ contract SolarSettle {
         return prosumers[prosumer].registered == false && reader == prosumer;
     }
 
-    function setAuthorizedReader(address prosumer, address reader) external onlyOwner {
+    function setAuthorizedReader(address prosumer, address reader) external onlyOwner whenNotPaused {
         require(prosumers[prosumer].registered, "Prosumer not registered");
         require(reader != address(0), "Reader cannot be zero");
         authorizedReaderFor[prosumer] = reader;
@@ -154,7 +155,7 @@ contract SolarSettle {
         string calldata subsidyID,
         uint256 panelCapacity,
         string calldata location
-    ) external {
+    ) external whenNotPaused {
         Prosumer storage p = prosumers[msg.sender];
         require(!p.registered && !p.pendingApproval, "Already registered or pending");
         require(panelCapacity > 0, "Capacity must be greater than 0");
@@ -174,7 +175,7 @@ contract SolarSettle {
         emit ProsumerRegistered(msg.sender, subsidyID, location);
     }
 
-    function approveProsumer(address prosumerAddr) external onlyOwner {
+    function approveProsumer(address prosumerAddr) external onlyOwner whenNotPaused {
         Prosumer storage p = prosumers[prosumerAddr];
         require(p.pendingApproval, "Not pending approval");
 
@@ -208,7 +209,7 @@ contract SolarSettle {
     // ------------------------------------------------------------------
     // Energy logging & trust score
     // ------------------------------------------------------------------
-    function logEnergyGeneration(uint256 kWh) external onlyRegistered {
+    function logEnergyGeneration(uint256 kWh) external onlyRegistered whenNotPaused {
         Prosumer storage p = prosumers[msg.sender];
 
         // Sanity check: a single reading cannot exceed what the panel could
@@ -222,7 +223,7 @@ contract SolarSettle {
         totalKwhLogged += kWh;
         p.carbonCredits += kWh;
 
-        emit EnergyLogged(msg.sender, kWh, block.timestamp);
+        emit EnergyLogged(msg.sender, msg.sender, kWh, block.timestamp);
         emit CarbonCreditMinted(msg.sender, kWh);
 
         if (p.trustScore < 100) {
@@ -235,7 +236,7 @@ contract SolarSettle {
 
     /// @notice Anyone can flag inactivity, but a prosumer can only be
     /// penalized once per 7-day window (prevents trust-score draining).
-    function checkInactivity(address prosumerAddr) external {
+    function checkInactivity(address prosumerAddr) external whenNotPaused {
         Prosumer storage p = prosumers[prosumerAddr];
         require(p.registered, "Not registered");
 
@@ -254,7 +255,7 @@ contract SolarSettle {
     // ------------------------------------------------------------------
     // P2P Energy marketplace
     // ------------------------------------------------------------------
-    function listEnergy(uint256 kWh, uint256 pricePerUnit) external onlyRegistered {
+    function listEnergy(uint256 kWh, uint256 pricePerUnit) external onlyRegistered whenNotPaused {
         require(kWh > 0 && pricePerUnit > 0, "kWh and price must be greater than 0");
 
         listings[listingCount] = EnergyListing({
@@ -268,7 +269,7 @@ contract SolarSettle {
         listingCount++;
     }
 
-    function cancelListing(uint256 listingId) external {
+    function cancelListing(uint256 listingId) external whenNotPaused {
         EnergyListing storage l = listings[listingId];
         require(l.active, "Listing not active");
         require(l.seller == msg.sender, "Not the seller");
@@ -277,7 +278,7 @@ contract SolarSettle {
         emit ListingCancelled(listingId);
     }
 
-    function buyEnergy(uint256 listingId) external payable nonReentrant {
+    function buyEnergy(uint256 listingId) external payable nonReentrant whenNotPaused {
         EnergyListing storage l = listings[listingId];
         require(l.active, "Listing not active");
         require(msg.sender != l.seller, "Cannot buy your own listing");

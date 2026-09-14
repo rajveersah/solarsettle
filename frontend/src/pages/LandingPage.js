@@ -10,7 +10,7 @@ setDeployedChainId(deployed.chainId);
 
 const navLinks = [
   { label: 'Marketplace', href: '#marketplace' },
-  { label: 'Technology', href: '#network' },
+  { label: 'Technology', href: '#technology' },
   { label: 'Impact', href: '#network' },
   { label: 'About', href: '#network' },
 ];
@@ -109,6 +109,39 @@ export default function LandingPage() {
             <h3>Trusted oversight</h3>
             <p>Government and DISCOM teams get an actionable view of registrations, trust scores, and potential risks.</p>
           </article>
+        </div>
+      </section>
+
+      <section className="architecture-section" id="architecture" aria-labelledby="architecture-title">
+        <div className="architecture-intro">
+          <span>How SolarSettle works</span>
+          <h2 id="architecture-title">Designed for trust at every step.</h2>
+          <p>SolarSettle connects the people generating energy, the institutions verifying it, and the buyers settling it through one transparent workflow.</p>
+        </div>
+        <div className="architecture-flow" aria-label="SolarSettle architecture diagram">
+          <article className="architecture-node"><span>01</span><strong>Prosumer</strong><p>Registers a panel and records solar generation.</p></article>
+          <i className="architecture-arrow" aria-hidden="true">→</i>
+          <article className="architecture-node"><span>02</span><strong>Verification layer</strong><p>Capacity limits and trust rules validate activity.</p></article>
+          <i className="architecture-arrow" aria-hidden="true">→</i>
+          <article className="architecture-node"><span>03</span><strong>Smart contract</strong><p>Records approvals, listings, settlement, and audit events.</p></article>
+          <i className="architecture-arrow" aria-hidden="true">→</i>
+          <article className="architecture-node"><span>04</span><strong>Buyer &amp; DISCOM</strong><p>Buy energy or monitor risk through role dashboards.</p></article>
+        </div>
+        <div className="fraud-guardrails">
+          <span>Built-in safeguards</span><p>Capacity-based generation checks</p><p>Inactivity monitoring</p><p>Duplicate-subsidy review</p><p>On-chain audit trail</p>
+        </div>
+      </section>
+
+      <section className="technology-section" id="technology" aria-labelledby="technology-title">
+        <div className="technology-intro">
+          <span>Technology stack</span>
+          <h2 id="technology-title">Built for a connected energy network.</h2>
+        </div>
+        <div className="technology-grid">
+          <article><span>Frontend</span><strong>React</strong><p>Role-based dashboards and responsive interface.</p></article>
+          <article><span>Wallet &amp; Web3</span><strong>MetaMask + Ethers.js</strong><p>Wallet signing, network checks, and contract calls.</p></article>
+          <article><span>Trust layer</span><strong>Solidity + Hardhat</strong><p>Registration, verification, listings, and settlement rules.</p></article>
+          <article><span>Data</span><strong>On-chain events</strong><p>Auditable records with preview data only when live data is unavailable.</p></article>
         </div>
       </section>
 

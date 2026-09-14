@@ -26,9 +26,9 @@ const DEMO_BASE_PROSUMERS = [
   { address: '0x2F41aCA9eD23530819f78c9C26d18D52dEaA0022', subsidyID: 'PMKUSUM-DEMO-2097', location: 'Indore, MP', capacityKw: '3.5', trustScore: 78, generated: 1265, credits: 1265, lastReading: new Date(Date.now() - DAY_MS).toLocaleDateString(), daysSilent: 1, atRisk: false, riskReason: 'Normal generation curve', isDemo: true },
 ];
 const FRAUD_SCENARIOS = {
-  spike: { label: 'Meter spike', row: { address: '0xFraud0000000000000000000000000000000A91', subsidyID: 'PMKUSUM-FRAUD-9001', location: 'Jabalpur, MP', capacityKw: '2.0', trustScore: 28, generated: 940, credits: 940, lastReading: new Date().toLocaleDateString(), daysSilent: 0, atRisk: true, riskReason: 'Claimed 168 kWh in one day from a 2.0 kW panel', evidence: 'Generation exceeds physical capacity by 250%', isDemo: true } },
-  silent: { label: 'Silent meter', row: { address: '0xFraud0000000000000000000000000000000B72', subsidyID: 'PMKUSUM-FRAUD-8174', location: 'Ujjain, MP', capacityKw: '4.2', trustScore: 36, generated: 2105, credits: 2105, lastReading: new Date(Date.now() - 13 * DAY_MS).toLocaleDateString(), daysSilent: 13, atRisk: true, riskReason: 'No smart-meter reading for 13 days', evidence: 'Inactivity window exceeded by 6 days', isDemo: true } },
-  duplicate: { label: 'Duplicate subsidy', row: { address: '0xFraud0000000000000000000000000000000C53', subsidyID: 'PMKUSUM-DEMO-1142', location: 'Bhopal, MP', capacityKw: '5.0', trustScore: 22, generated: 0, credits: 0, lastReading: new Date().toLocaleDateString(), daysSilent: 0, atRisk: true, riskReason: 'Subsidy ID already belongs to another wallet', evidence: 'Same subsidy ID submitted from two addresses', isDemo: true } },
+  spike: { label: 'Meter spike', impact: { frozenListings: 0, blockedApprovals: 0 }, row: { address: '0xFraud0000000000000000000000000000000A91', subsidyID: 'PMKUSUM-FRAUD-9001', location: 'Jabalpur, MP', capacityKw: '2.0', trustScore: 28, generated: 940, credits: 940, lastReading: new Date().toLocaleDateString(), daysSilent: 0, atRisk: true, riskReason: 'Claimed 168 kWh in one day from a 2.0 kW panel', evidence: 'Generation exceeds physical capacity by 250%', isDemo: true } },
+  silent: { label: 'Silent meter', impact: { frozenListings: 1, blockedApprovals: 0 }, row: { address: '0xFraud0000000000000000000000000000000B72', subsidyID: 'PMKUSUM-FRAUD-8174', location: 'Ujjain, MP', capacityKw: '4.2', trustScore: 36, generated: 2105, credits: 2105, lastReading: new Date(Date.now() - 13 * DAY_MS).toLocaleDateString(), daysSilent: 13, atRisk: true, riskReason: 'No smart-meter reading for 13 days', evidence: 'Inactivity window exceeded by 6 days', isDemo: true } },
+  duplicate: { label: 'Duplicate subsidy', impact: { frozenListings: 0, blockedApprovals: 1 }, row: { address: '0xFraud0000000000000000000000000000000C53', subsidyID: 'PMKUSUM-DEMO-1142', location: 'Bhopal, MP', capacityKw: '5.0', trustScore: 22, generated: 0, credits: 0, lastReading: new Date().toLocaleDateString(), daysSilent: 0, atRisk: true, riskReason: 'Subsidy ID already belongs to another wallet', evidence: 'Same subsidy ID submitted from two addresses', isDemo: true } },
 };
 
 const CITY_POSITIONS = {
@@ -227,6 +227,24 @@ export default function GovtDashboard() {
     : 0;
   const gridTimeline = useMemo(() => getGridTimeline(timeRange, selectedState), [timeRange, selectedState]);
   const alertItems = useMemo(() => buildAlerts(filteredProsumers, demoMode ? 'simulation' : 'monitoring'), [filteredProsumers, demoMode]);
+  const simulationImpact = demoCase ? Object.values(FRAUD_SCENARIOS).find((scenario) => scenario.label === demoCase.label)?.impact : null;
+  const simulatedGeneration = filteredProsumers
+    .filter((row) => !row.atRisk)
+    .reduce((sum, row) => sum + Number(row.generated || 0), 0);
+  const showingSimulationImpact = Boolean(demoCase);
+  const headlineMetrics = showingSimulationImpact
+    ? {
+      totalKwh: simulatedGeneration,
+      registeredCount: filteredProsumers.length,
+      activeListings: Math.max(0, 6 - (simulationImpact?.frozenListings || 0)),
+      pendingApprovals: simulationImpact?.blockedApprovals || 0,
+    }
+    : {
+      totalKwh: selectedState ? filteredProsumers.reduce((sum, row) => sum + row.generated, 0) : stats?.totalKwh || 0,
+      registeredCount: selectedState ? filteredProsumers.length : stats?.registeredCount || 0,
+      activeListings: stats?.activeListings || 0,
+      pendingApprovals: filteredPending.length,
+    };
   const mapConnections = useMemo(() => [
     ...PROVIDERS.map((provider) => ({
       address: `buyer-grid-${provider.id}`, subsidyID: provider.name, location: `${provider.city}, ${provider.stateName}`,
@@ -279,10 +297,10 @@ export default function GovtDashboard() {
 
         {stats && (
           <div className="card-grid">
-            <TiltCard className="stat-card"><p className="stat-label">Total Generation Logged</p><p className="stat-value solar">{(selectedState ? filteredProsumers.reduce((sum, row) => sum + row.generated, 0) : stats.totalKwh).toLocaleString('en-IN')} kWh</p></TiltCard>
-            <TiltCard className="stat-card"><p className="stat-label">Approved Prosumers</p><p className="stat-value trust">{selectedState ? filteredProsumers.length : stats.registeredCount}</p></TiltCard>
-            <TiltCard className="stat-card"><p className="stat-label">Active Listings</p><p className="stat-value">{stats.activeListings}</p></TiltCard>
-            <TiltCard className="stat-card"><p className="stat-label">Pending Approvals</p><p className="stat-value" style={{ color: filteredPending.length > 0 ? 'var(--accent-alert)' : undefined }}>{filteredPending.length}</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">{showingSimulationImpact ? 'Verified Generation (Simulation)' : 'Total Generation Logged'}</p><p className="stat-value solar">{headlineMetrics.totalKwh.toLocaleString('en-IN')} kWh</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">Approved Prosumers</p><p className="stat-value trust">{headlineMetrics.registeredCount}</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">{showingSimulationImpact ? 'Active Listings After Review' : 'Active Listings'}</p><p className="stat-value">{headlineMetrics.activeListings}</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">{showingSimulationImpact ? 'Approvals Blocked' : 'Pending Approvals'}</p><p className="stat-value" style={{ color: headlineMetrics.pendingApprovals > 0 ? 'var(--accent-alert)' : undefined }}>{headlineMetrics.pendingApprovals}</p></TiltCard>
           </div>
         )}
 
