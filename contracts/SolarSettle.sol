@@ -120,7 +120,7 @@ contract SolarSettle {
         return reader == prosumer;
     }
 
-    function setAuthorizedReader(address prosumer, address reader) external onlyOwner {
+    function setAuthorizedReader(address prosumer, address reader) external onlyOwner whenNotPaused {
         require(prosumers[prosumer].registered, "Prosumer not registered");
         require(reader != address(0), "Reader cannot be zero");
         authorizedReaderFor[prosumer] = reader;
@@ -260,7 +260,7 @@ contract SolarSettle {
     // ------------------------------------------------------------------
     // P2P Energy marketplace
     // ------------------------------------------------------------------
-    function listEnergy(uint256 kWh, uint256 pricePerUnit) external onlyRegistered {
+    function listEnergy(uint256 kWh, uint256 pricePerUnit) external onlyRegistered whenNotPaused {
         require(kWh > 0 && pricePerUnit > 0, "kWh and price must be greater than 0");
 
         listings[listingCount] = EnergyListing({
@@ -274,7 +274,7 @@ contract SolarSettle {
         listingCount++;
     }
 
-    function cancelListing(uint256 listingId) external {
+    function cancelListing(uint256 listingId) external whenNotPaused {
         EnergyListing storage l = listings[listingId];
         require(l.active, "Listing not active");
         require(l.seller == msg.sender, "Not the seller");
@@ -283,7 +283,7 @@ contract SolarSettle {
         emit ListingCancelled(listingId);
     }
 
-    function buyEnergy(uint256 listingId) external payable nonReentrant {
+    function buyEnergy(uint256 listingId) external payable nonReentrant whenNotPaused {
         EnergyListing storage l = listings[listingId];
         require(l.active, "Listing not active");
         require(msg.sender != l.seller, "Cannot buy your own listing");

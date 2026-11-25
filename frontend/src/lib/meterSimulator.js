@@ -1,19 +1,25 @@
-// Simulated smart-meter feed: realistic solar curve (0 at night, peak ~1 PM).
-// In production this is replaced by an oracle feeding real meter data on-chain.
-export function generateReading() {
-  const now = new Date();
-  const hour = now.getHours() + now.getMinutes() / 60;
-  const peak = 13;
-  const spread = 4;
-
-  let kwh = 20 * Math.exp(-Math.pow(hour - peak, 2) / (2 * spread * spread));
-  kwh = Math.max(0, kwh + (Math.random() * 2 - 1)); // measurement noise
+// Simulated smart-meter feed. It is deliberately labelled as simulated and is
+// only used when a wallet/contract is unavailable; production values come from
+// the on-chain meter workflow.
+export function generateReading({ date = new Date(), capacityKw = 5, weatherFactor } = {}) {
+  const timestamp = new Date(date);
+  const hour = timestamp.getHours() + timestamp.getMinutes() / 60;
+  const peakHour = 13;
+  const daylightCurve = Math.exp(-Math.pow(hour - peakHour, 2) / (2 * 3.7 * 3.7));
+  const seasonalFactor = 0.82 + ((Math.cos(((timestamp.getMonth() - 4) / 12) * Math.PI * 2) + 1) * 0.07);
+  const cloudFactor = weatherFactor ?? (0.88 + Math.random() * 0.12);
+  const kWh = Math.max(0, capacityKw * 4.4 * daylightCurve * seasonalFactor * cloudFactor);
+  const roundedKwh = Number(kWh.toFixed(2));
 
   return {
     meterId: 'SIM-METER-001',
-    timestamp: now.toISOString(),
-    kwh: parseFloat(kwh.toFixed(2)),
-    voltage: 220 + Math.floor(Math.random() * 10),
-    status: 'active',
+    timestamp: timestamp.toISOString(),
+    // Both spellings keep the existing dashboards compatible while making the
+    // display field explicit.
+    kWh: roundedKwh,
+    kwh: roundedKwh,
+    expectedKwh: Number((capacityKw * 4.4 * daylightCurve * seasonalFactor).toFixed(2)),
+    voltage: 224 + Math.floor(Math.random() * 8),
+    status: 'simulated',
   };
 }

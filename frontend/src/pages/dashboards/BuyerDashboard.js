@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useWeb3 } from '../../context/Web3Context';
 import './BuyerDashboard.css';
-import { CONTRACT_CHAIN_ID } from '../../config';
-import { fetchPublicMarketData, setDeployedChainId } from '../../lib/contractReads';
+import './GlassDashboard.css';
 
 /**
  * SolarSettle Buyer Dashboard
@@ -90,7 +90,30 @@ const state = {
 
   location: "Greater Noida, Uttar Pradesh",
 
-  theme: "light"
+  theme: "light",
+
+  weather: {
+    status: "loading",
+    data: null,
+    location: "Greater Noida, Uttar Pradesh"
+  }
+};
+
+const MARKETPLACE_COORDINATES = {
+  "Greater Noida, Uttar Pradesh": [28.4744, 77.5040],
+  "New Delhi, Delhi": [28.6139, 77.2090],
+  "Gurugram, Haryana": [28.4595, 77.0266],
+  "Mumbai, Maharashtra": [19.0760, 72.8777],
+  "Pune, Maharashtra": [18.5204, 73.8567],
+  "Bengaluru, Karnataka": [12.9716, 77.5946],
+  "Hyderabad, Telangana": [17.3850, 78.4867],
+  "Chennai, Tamil Nadu": [13.0827, 80.2707],
+  "Ahmedabad, Gujarat": [23.0225, 72.5714],
+  "Jaipur, Rajasthan": [26.9124, 75.7873],
+  "Kolkata, West Bengal": [22.5726, 88.3639],
+  "Lucknow, Uttar Pradesh": [26.8467, 80.9462],
+  "Kochi, Kerala": [9.9312, 76.2673],
+  "Chandigarh": [30.7333, 76.7794]
 };
 
 const charts = new Map();
@@ -681,32 +704,6 @@ const PROVIDERS =
     generateProvider
   );
 
-function applyLiveListings(listings) {
-  if (!listings?.length) return false;
-
-  const liveProviders = listings.map((listing, index) => {
-    const base = PROVIDERS[index % PROVIDERS.length];
-    const seller = listing.seller;
-    return {
-      ...base,
-      id: `onchain-listing-${listing.id}`,
-      name: `On-chain prosumer #${listing.id}`,
-      locality: `Wallet ${seller.slice(0, 6)}...${seller.slice(-4)}`,
-      availableEnergyKwh: listing.kWh,
-      committedEnergyKwh: 0,
-      price: Number(listing.priceDisplay),
-      listingId: listing.id,
-      seller,
-      onChainListing: true,
-      transactions: [],
-    };
-  });
-
-  PROVIDERS.splice(0, PROVIDERS.length, ...liveProviders);
-  state.selectedProviderId = liveProviders[0].id;
-  return true;
-}
-
 /* =========================================================
    BUYER-SIDE STATE + REALISTIC ORDER MODEL
 ========================================================= */
@@ -970,7 +967,9 @@ function icon(name) {
 
     search: "⌕",
 
-    bell: "♢",
+    bell: '<svg class="ss-header-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 22h4"/></svg>',
+
+    sun: '<svg class="ss-brand-sun" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="7"/><path d="M20 2v7M20 31v7M2 20h7M31 20h7M7.3 7.3l5 5M27.7 27.7l5 5M32.7 7.3l-5 5M12.3 27.7l-5 5"/></svg>',
 
     verified: "✓",
 
@@ -992,20 +991,128 @@ function providerImage(provider) {
   const images = {
     "provider-greenray": "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=900&q=82",
     "provider-sungrid-delhi": "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=900&q=82",
-    "provider-ecopower-bengaluru": "https://images.unsplash.com/photo-1508514177221-188b1cf16e52?auto=format&fit=crop&w=900&q=82",
+    "provider-ecopower-bengaluru": "/provider-images/ecopower-whitefield.jpeg",
     "provider-suryalink-mumbai": "/provider-images/floating-solar.jpeg",
     "provider-rayvolt-hyderabad": "https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&w=900&q=82",
     "provider-brightroof-pune": "/provider-images/solar-field.webp",
     "provider-amber-jaipur": "/provider-images/desert-solar.webp",
     "provider-solaris-ahmedabad": "/provider-images/sunset-solar.jpg",
     "provider-kaveri-chennai": "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=901&q=82",
-    "provider-ganga-kolkata": "https://images.unsplash.com/photo-1508514177221-188b1cf16e52?auto=format&fit=crop&w=901&q=82",
+    "provider-ganga-kolkata": "/provider-images/ganga-solar-salt-lake.webp",
     "provider-gomti-lucknow": "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=901&q=82",
     "provider-ncr-gurugram": "/provider-images/sunset-solar.jpg",
     "provider-riverfront-kochi": "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=900&q=82",
     "provider-heritage-chandigarh": "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=902&q=82"
   };
   return images[provider.id] || images["provider-greenray"];
+}
+
+function timeGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning.";
+  if (hour < 17) return "Good afternoon.";
+  return "Good evening.";
+}
+
+function weatherDescription(code) {
+  const descriptions = {
+    0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+    45: "Foggy", 48: "Rime fog", 51: "Light drizzle", 53: "Drizzle",
+    55: "Heavy drizzle", 61: "Light rain", 63: "Rain", 65: "Heavy rain",
+    71: "Light snow", 73: "Snow", 75: "Heavy snow", 80: "Rain showers",
+    81: "Rain showers", 82: "Heavy showers", 95: "Thunderstorm"
+  };
+  return descriptions[code] || "Current conditions";
+}
+
+function solarOutlook(cloudCover) {
+  if (cloudCover <= 25) return "Excellent";
+  if (cloudCover <= 55) return "Good";
+  if (cloudCover <= 75) return "Moderate";
+  return "Limited";
+}
+
+function formatWeatherTime(value) {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("en-IN", {
+    hour: "2-digit", minute: "2-digit", hour12: false
+  }).format(new Date(value));
+}
+
+async function loadWeather(location) {
+  const coordinates = MARKETPLACE_COORDINATES[location];
+  if (!coordinates) return;
+
+  state.weather = { status: "loading", data: null, location };
+  if (state.page === "overview") render();
+
+  const [latitude, longitude] = coordinates;
+  const url = new URL("https://api.open-meteo.com/v1/forecast");
+  url.search = new URLSearchParams({
+    latitude, longitude,
+    current: "temperature_2m,cloud_cover,weather_code",
+    daily: "sunrise,sunset",
+    timezone: "auto",
+    forecast_days: "1"
+  });
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Weather service unavailable");
+    const forecast = await response.json();
+    if (!forecast.current || !forecast.daily) throw new Error("Incomplete weather data");
+    if (state.location !== location) return;
+
+    state.weather = {
+      status: "ready",
+      location,
+      data: {
+        temperature: Math.round(forecast.current.temperature_2m),
+        cloudCover: forecast.current.cloud_cover,
+        description: weatherDescription(forecast.current.weather_code),
+        sunrise: forecast.daily.sunrise?.[0],
+        sunset: forecast.daily.sunset?.[0]
+      }
+    };
+  } catch (error) {
+    if (state.location !== location) return;
+    state.weather = { status: "error", data: null, location };
+  }
+
+  if (state.page === "overview") render();
+}
+
+function weatherCard() {
+  const { status, data, location } = state.weather;
+  const city = location.split(",")[0];
+  const loading = status === "loading";
+  const unavailable = status === "error" || !data;
+  const outlook = unavailable ? "—" : solarOutlook(data.cloudCover);
+
+  return `
+    <div class="ss-card ss-weather-card">
+      <div class="ss-card-head">
+        <div>
+          <span class="ss-label">Weather & Solar Conditions</span>
+          <h2>${loading ? "Loading local forecast…" : unavailable ? "Forecast unavailable" : `${outlook} conditions for solar`}</h2>
+        </div>
+        <button class="ss-small-button" data-action="toggle-theme">☼ / ☾</button>
+      </div>
+      <div class="ss-weather-main">
+        <div class="ss-weather-temp">${unavailable ? "—" : `${data.temperature}°`}</div>
+        <div>
+          <strong>${loading ? "Fetching live weather" : unavailable ? "Try again shortly" : data.description}</strong>
+          <span>${escapeHtml(city)} · Today</span>
+        </div>
+      </div>
+      <div class="ss-weather-stats">
+        <div><span>Cloud cover</span><strong>${unavailable ? "—" : `${data.cloudCover}%`}</strong></div>
+        <div><span>Sunrise</span><strong>${unavailable ? "—" : formatWeatherTime(data.sunrise)}</strong></div>
+        <div><span>Sunset</span><strong>${unavailable ? "—" : formatWeatherTime(data.sunset)}</strong></div>
+        <div><span>Solar outlook</span><strong class="${outlook === "Excellent" || outlook === "Good" ? "ss-positive" : ""}">${outlook}</strong></div>
+      </div>
+    </div>
+  `;
 }
 
 /* =========================================================
@@ -1077,7 +1184,7 @@ function appShell(content) {
         <div class="ss-brand">
 
           <div class="ss-brand-mark">
-            ☀
+            ${icon("sun")}
           </div>
 
           <div>
@@ -1301,7 +1408,7 @@ function overviewPage() {
         </div>
 
         <h1>
-          Good afternoon.
+          ${timeGreeting()}
         </h1>
 
         <p>
@@ -1423,92 +1530,7 @@ function overviewPage() {
 
     <section class="ss-grid-two">
 
-      <div class="ss-card ss-weather-card">
-
-        <div class="ss-card-head">
-
-          <div>
-
-            <span class="ss-label">
-              Weather & Solar Conditions
-            </span>
-
-            <h2>
-              Good conditions for solar
-            </h2>
-
-          </div>
-
-          <button
-            class="ss-small-button"
-            data-action="toggle-theme"
-          >
-            ☼ / ☾
-          </button>
-
-        </div>
-
-        <div class="ss-weather-main">
-
-          <div class="ss-weather-temp">
-            31°
-          </div>
-
-          <div>
-
-            <strong>
-              Partly cloudy
-            </strong>
-
-            <span>
-              Greater Noida · Today
-            </span>
-
-          </div>
-
-        </div>
-
-        <div class="ss-weather-stats">
-
-          <div>
-            <span>
-              Cloud cover
-            </span>
-            <strong>
-              28%
-            </strong>
-          </div>
-
-          <div>
-            <span>
-              Sunrise
-            </span>
-            <strong>
-              06:02
-            </strong>
-          </div>
-
-          <div>
-            <span>
-              Sunset
-            </span>
-            <strong>
-              18:26
-            </strong>
-          </div>
-
-          <div>
-            <span>
-              Solar outlook
-            </span>
-            <strong class="ss-positive">
-              Good
-            </strong>
-          </div>
-
-        </div>
-
-      </div>
+      ${weatherCard()}
 
       <div class="ss-card">
 
@@ -4806,7 +4828,7 @@ function bindEvents() {
         "click",
         () => {
 
-          openInfoModal("Buyer Profile", `Buyer account\n\nLocation: ${state.location}\nOrders: ${buyerTransactions().length}\nEnergy purchased: ${round(buyerPurchasedKwh(),1)} kWh`);
+          openProfileModal();
 
         }
       );
@@ -4840,7 +4862,7 @@ function bindEvents() {
         "click",
         () => {
 
-          openInfoModal("Log out", "Your existing authentication layer should handle session termination. No credentials are stored by this dashboard module.");
+          requestLogout();
 
         }
       );
@@ -4875,11 +4897,29 @@ function openInfoModal(title, message) {
   root.querySelectorAll("[data-modal-close]").forEach(el=>el.addEventListener("click",e=>{if(e.target===el||el.classList.contains("ss-modal-close"))root.remove();}));
 }
 
+function requestLogout() {
+  window.dispatchEvent(new Event("solarsettle:logout"));
+}
+
+function openProfileModal() {
+  const old = document.getElementById("ss-modal-root");
+  if (old) old.remove();
+
+  const root = document.createElement("div");
+  root.id = "ss-modal-root";
+  root.innerHTML = `<div class="ss-modal-backdrop" data-modal-close><div class="ss-modal" role="dialog" aria-modal="true" aria-labelledby="ss-profile-title"><button class="ss-modal-close" data-modal-close aria-label="Close">×</button><div class="ss-eyebrow">BUYER PROFILE</div><h2 id="ss-profile-title">Buyer account</h2><div class="ss-info-modal-message">Location: ${escapeHtml(state.location)}<br>Orders: ${buyerTransactions().length}<br>Energy purchased: ${round(buyerPurchasedKwh(), 1)} kWh</div><button class="ss-button primary full" data-profile-logout>Log out</button></div></div>`;
+  document.body.appendChild(root);
+  root.querySelectorAll("[data-modal-close]").forEach(element => element.addEventListener("click", event => {
+    if (event.target === element || element.classList.contains("ss-modal-close")) root.remove();
+  }));
+  root.querySelector("[data-profile-logout]").addEventListener("click", requestLogout);
+}
+
 function openLocationModal(){
   const locations=["Greater Noida, Uttar Pradesh","New Delhi, Delhi","Gurugram, Haryana","Mumbai, Maharashtra","Pune, Maharashtra","Bengaluru, Karnataka","Hyderabad, Telangana","Chennai, Tamil Nadu","Ahmedabad, Gujarat","Jaipur, Rajasthan","Kolkata, West Bengal","Lucknow, Uttar Pradesh","Kochi, Kerala","Chandigarh"];
   const old=document.getElementById("ss-modal-root"); if(old)old.remove(); const root=document.createElement("div"); root.id="ss-modal-root";
   root.innerHTML=`<div class="ss-modal-backdrop" data-modal-close><div class="ss-modal"><button class="ss-modal-close" data-modal-close>×</button><div class="ss-eyebrow">MARKET AREA</div><h2>Choose your marketplace area</h2><p class="ss-muted">This changes provider discovery. It does not claim physical grid connectivity.</p><select id="ss-location-select" class="ss-text-input">${locations.map(x=>`<option ${x===state.location?"selected":""}>${x}</option>`).join("")}</select><button class="ss-button primary full" id="ss-save-location">Apply location</button></div></div>`;
-  document.body.appendChild(root); root.querySelectorAll("[data-modal-close]").forEach(el=>el.addEventListener("click",e=>{if(e.target===el||el.classList.contains("ss-modal-close"))root.remove();})); root.querySelector("#ss-save-location").addEventListener("click",()=>{state.location=root.querySelector("#ss-location-select").value; root.remove(); render();});
+  document.body.appendChild(root); root.querySelectorAll("[data-modal-close]").forEach(el=>el.addEventListener("click",e=>{if(e.target===el||el.classList.contains("ss-modal-close"))root.remove();})); root.querySelector("#ss-save-location").addEventListener("click",()=>{state.location=root.querySelector("#ss-location-select").value; root.remove(); loadWeather(state.location);});
 }
 
 /* =========================================================
@@ -5350,7 +5390,6 @@ function showPurchaseReview(
         const networkCharge = 0;
         const order = {
           providerId: provider.id, providerName: provider.name, quantityKwh: amount,
-          listingId: provider.listingId,
           unitPrice: provider.price, energyCost, serviceFee, networkCharge,
           total: energyCost + serviceFee + networkCharge,
           supplyPreference: state.purchaseSupply, settlementMethod: state.purchaseSettlement,
@@ -5358,7 +5397,7 @@ function showPurchaseReview(
         };
         Promise.resolve(window.SolarSettleBridge?.purchaseEnergy?.(order))
           .then(result => {
-            const tx = { id: result.txHash || `SS-ORD-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`, providerId: provider.id, date:new Date(), energy:amount, price:provider.price, energyCost:round(energyCost,2), serviceFee:round(serviceFee,2), networkCharge:0, total:round(order.total,2), status:"Submitted", settlement:state.purchaseSettlement === "wallet" ? "Wallet" : "Account", supply:state.purchaseSupply };
+            const tx = { id: `SS-ORD-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`, providerId: provider.id, date:new Date(), energy:amount, price:provider.price, energyCost:round(energyCost,2), serviceFee:round(serviceFee,2), networkCharge:0, total:round(order.total,2), status: result ? "Submitted" : "Recorded", settlement:state.purchaseSettlement === "wallet" ? "Wallet" : "Account", supply:state.purchaseSupply };
             buyerTransactions().unshift(tx);
             provider.availableEnergyKwh = round(Math.max(0, provider.availableEnergyKwh - amount), 1);
             provider.committedEnergyKwh = round((provider.committedEnergyKwh || 0) + amount, 1);
@@ -5564,49 +5603,10 @@ function initialize() {
     "light";
 
   render();
+  loadWeather(state.location);
 }
 
 // React mounts the dashboard through the adapter below.
-
-function BuyerNetworkBar() {
-  const { account, connectWallet, connecting, error, supportedChains, targetChainId, selectNetwork } = useWeb3();
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, padding: '10px 24px', borderBottom: '1px solid var(--ss-border)', background: 'var(--ss-surface)', color: 'var(--ss-muted)', fontSize: 12 }}>
-      <span>{error || (account ? `Connected: ${account.slice(0, 6)}...${account.slice(-4)}` : 'Connect MetaMask for blockchain actions')}</span>
-      <select value={targetChainId} onChange={(event) => selectNetwork(Number(event.target.value))} aria-label="Blockchain network">
-        {supportedChains.map((network) => (
-          <option key={network.chainId} value={network.chainId} disabled={!network.address || network.address === '0x0000000000000000000000000000000000000000'}>
-            {network.label}{network.address && network.address !== '0x0000000000000000000000000000000000000000' ? '' : ' (not deployed)'}
-          </option>
-        ))}
-      </select>
-      {!account && <button type="button" className="ss-button primary" onClick={() => connectWallet(targetChainId)} disabled={connecting}>{connecting ? 'Connecting...' : 'Connect MetaMask'}</button>}
-    </div>
-  );
-}
-
-function BuyerBlockchainBridge({ children }) {
-  const { contract, connectWallet, account } = useWeb3();
-
-  useEffect(() => {
-    window.SolarSettleBridge = {
-      purchaseEnergy: async (order) => {
-        const wallet = contract ? { contract } : await connectWallet();
-        if (!wallet?.contract) throw new Error('Connect MetaMask before purchasing energy.');
-        if (order.listingId === undefined || order.listingId === null) throw new Error('This provider has no live on-chain listing.');
-        const listing = await wallet.contract.listings(order.listingId);
-        if (!listing.active) throw new Error('This on-chain listing is no longer active. Refresh the marketplace.');
-        const total = BigInt(listing.kWh) * BigInt(listing.pricePerUnit);
-        const tx = await wallet.contract.buyEnergy(order.listingId, { value: total });
-        const receipt = await tx.wait();
-        return { txHash: receipt.hash || receipt.transactionHash, account };
-      },
-    };
-    return () => { delete window.SolarSettleBridge; };
-  }, [account, connectWallet, contract]);
-
-  return children;
-}
 
 /* =========================================================
    OPTIONAL EXPORTS
@@ -5627,20 +5627,28 @@ export {
 };
 
 export default function BuyerDashboard() {
+  const { logout } = useWeb3();
+  const navigate = useNavigate();
+
   useEffect(() => {
-    setDeployedChainId(CONTRACT_CHAIN_ID);
     initialize();
-    let mounted = true;
-    fetchPublicMarketData().then((market) => {
-      if (mounted && applyLiveListings(market?.listings)) render();
-    }).catch(() => {});
+    const handleLogout = () => {
+      logout();
+      navigate('/login', { replace: true });
+    };
+    window.addEventListener('solarsettle:logout', handleLogout);
+
     return () => {
-      mounted = false;
+      window.removeEventListener('solarsettle:logout', handleLogout);
       destroyCharts();
       const root = document.getElementById(APP_ROOT_ID);
       if (root) root.innerHTML = '';
     };
-  }, []);
+  }, [logout, navigate]);
 
-  return <BuyerBlockchainBridge><BuyerNetworkBar /><div id={APP_ROOT_ID} /></BuyerBlockchainBridge>;
+  return <div
+    id={APP_ROOT_ID}
+    className="glass-dashboard"
+    style={{ '--ss-dashboard-image': `url(${process.env.PUBLIC_URL}/solarsettle-hero.png)` }}
+  />;
 }

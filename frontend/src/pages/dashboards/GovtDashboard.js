@@ -8,6 +8,7 @@ import { PROVIDERS } from './BuyerDashboard';
 import { sendAlertEmail } from '../../lib/alertMailer';
 import './BuyerDashboard.css';
 import './DashboardTheme.css';
+import './GlassDashboard.css';
 
 const INACTIVITY_WINDOW_DAYS = 7;
 const DAY_MS = 24 * 3600 * 1000;
@@ -25,9 +26,9 @@ const DEMO_BASE_PROSUMERS = [
   { address: '0x2F41aCA9eD23530819f78c9C26d18D52dEaA0022', subsidyID: 'PMKUSUM-DEMO-2097', location: 'Indore, MP', capacityKw: '3.5', trustScore: 78, generated: 1265, credits: 1265, lastReading: new Date(Date.now() - DAY_MS).toLocaleDateString(), daysSilent: 1, atRisk: false, riskReason: 'Normal generation curve', isDemo: true },
 ];
 const FRAUD_SCENARIOS = {
-  spike: { label: 'Meter spike', row: { address: '0xFraud0000000000000000000000000000000A91', subsidyID: 'PMKUSUM-FRAUD-9001', location: 'Jabalpur, MP', capacityKw: '2.0', trustScore: 28, generated: 940, credits: 940, lastReading: new Date().toLocaleDateString(), daysSilent: 0, atRisk: true, riskReason: 'Claimed 168 kWh in one day from a 2.0 kW panel', evidence: 'Generation exceeds physical capacity by 250%', isDemo: true } },
-  silent: { label: 'Silent meter', row: { address: '0xFraud0000000000000000000000000000000B72', subsidyID: 'PMKUSUM-FRAUD-8174', location: 'Ujjain, MP', capacityKw: '4.2', trustScore: 36, generated: 2105, credits: 2105, lastReading: new Date(Date.now() - 13 * DAY_MS).toLocaleDateString(), daysSilent: 13, atRisk: true, riskReason: 'No smart-meter reading for 13 days', evidence: 'Inactivity window exceeded by 6 days', isDemo: true } },
-  duplicate: { label: 'Duplicate subsidy', row: { address: '0xFraud0000000000000000000000000000000C53', subsidyID: 'PMKUSUM-DEMO-1142', location: 'Bhopal, MP', capacityKw: '5.0', trustScore: 22, generated: 0, credits: 0, lastReading: new Date().toLocaleDateString(), daysSilent: 0, atRisk: true, riskReason: 'Subsidy ID already belongs to another wallet', evidence: 'Same subsidy ID submitted from two addresses', isDemo: true } },
+  spike: { label: 'Meter spike', impact: { frozenListings: 0, blockedApprovals: 0 }, row: { address: '0xFraud0000000000000000000000000000000A91', subsidyID: 'PMKUSUM-FRAUD-9001', location: 'Jabalpur, MP', capacityKw: '2.0', trustScore: 28, generated: 940, credits: 940, lastReading: new Date().toLocaleDateString(), daysSilent: 0, atRisk: true, riskReason: 'Claimed 168 kWh in one day from a 2.0 kW panel', evidence: 'Generation exceeds physical capacity by 250%', isDemo: true } },
+  silent: { label: 'Silent meter', impact: { frozenListings: 1, blockedApprovals: 0 }, row: { address: '0xFraud0000000000000000000000000000000B72', subsidyID: 'PMKUSUM-FRAUD-8174', location: 'Ujjain, MP', capacityKw: '4.2', trustScore: 36, generated: 2105, credits: 2105, lastReading: new Date(Date.now() - 13 * DAY_MS).toLocaleDateString(), daysSilent: 13, atRisk: true, riskReason: 'No smart-meter reading for 13 days', evidence: 'Inactivity window exceeded by 6 days', isDemo: true } },
+  duplicate: { label: 'Duplicate subsidy', impact: { frozenListings: 0, blockedApprovals: 1 }, row: { address: '0xFraud0000000000000000000000000000000C53', subsidyID: 'PMKUSUM-DEMO-1142', location: 'Bhopal, MP', capacityKw: '5.0', trustScore: 22, generated: 0, credits: 0, lastReading: new Date().toLocaleDateString(), daysSilent: 0, atRisk: true, riskReason: 'Subsidy ID already belongs to another wallet', evidence: 'Same subsidy ID submitted from two addresses', isDemo: true } },
 };
 
 const CITY_POSITIONS = {
@@ -106,13 +107,6 @@ function getGridTimeline(range, selectedState) {
 export default function GovtDashboard() {
   const { isWalletConnected, account, contract, connectWallet, connecting, logout } = useWeb3();
   const { pending, toast, run, setToast } = useTx();
-  const [darkMode, setDarkMode] = useState(() => {
-    try {
-      return window.localStorage.getItem('solarsettle-govt-theme') === 'dark';
-    } catch {
-      return false;
-    }
-  });
   const [stats, setStats] = useState(null);
   const [pendingList, setPendingList] = useState([]);
   const [prosumers, setProsumers] = useState([]);
@@ -125,23 +119,9 @@ export default function GovtDashboard() {
   const [mapZoomed, setMapZoomed] = useState(false);
   const [loadingLiveData, setLoadingLiveData] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  const [ownerAddress, setOwnerAddress] = useState(null);
-
-  const toggleDarkMode = () => {
-    setDarkMode((enabled) => {
-      const next = !enabled;
-      try {
-        window.localStorage.setItem('solarsettle-govt-theme', next ? 'dark' : 'light');
-      } catch {
-        // The visual preference still works when browser storage is unavailable.
-      }
-      return next;
-    });
-  };
 
   const load = useCallback(async () => {
     if (!contract) {
-      setOwnerAddress(null);
       setStats({ totalKwh: 19820, totalListings: 17, activeListings: 6, registeredCount: 12 });
       setPendingList(DEMO_PENDING);
       setProsumers(DEMO_PROSUMERS);
@@ -151,7 +131,6 @@ export default function GovtDashboard() {
     setDemoMode(false);
     setLoadingLiveData(true);
     try {
-      setOwnerAddress(await contract.owner());
       const s = await contract.platformStats();
       setStats({
         totalKwh: Number(s[0]),
@@ -239,7 +218,6 @@ export default function GovtDashboard() {
   };
 
   const short = (a) => a ? (a.slice(0, 6) + '...' + a.slice(-4)) : '';
-  const isOwner = !!account && !!ownerAddress && account.toLowerCase() === ownerAddress.toLowerCase();
   const displayProsumers = useMemo(() => [...demoRows, ...prosumers], [demoRows, prosumers]);
   const filteredProsumers = useMemo(() => selectedState ? displayProsumers.filter((row) => stateForLocation(row.location) === selectedState) : displayProsumers, [displayProsumers, selectedState]);
   const filteredPending = useMemo(() => selectedState ? pendingList.filter((row) => stateForLocation(row.location) === selectedState) : pendingList, [pendingList, selectedState]);
@@ -249,6 +227,24 @@ export default function GovtDashboard() {
     : 0;
   const gridTimeline = useMemo(() => getGridTimeline(timeRange, selectedState), [timeRange, selectedState]);
   const alertItems = useMemo(() => buildAlerts(filteredProsumers, demoMode ? 'simulation' : 'monitoring'), [filteredProsumers, demoMode]);
+  const simulationImpact = demoCase ? Object.values(FRAUD_SCENARIOS).find((scenario) => scenario.label === demoCase.label)?.impact : null;
+  const simulatedGeneration = filteredProsumers
+    .filter((row) => !row.atRisk)
+    .reduce((sum, row) => sum + Number(row.generated || 0), 0);
+  const showingSimulationImpact = Boolean(demoCase);
+  const headlineMetrics = showingSimulationImpact
+    ? {
+      totalKwh: simulatedGeneration,
+      registeredCount: filteredProsumers.length,
+      activeListings: Math.max(0, 6 - (simulationImpact?.frozenListings || 0)),
+      pendingApprovals: simulationImpact?.blockedApprovals || 0,
+    }
+    : {
+      totalKwh: selectedState ? filteredProsumers.reduce((sum, row) => sum + row.generated, 0) : stats?.totalKwh || 0,
+      registeredCount: selectedState ? filteredProsumers.length : stats?.registeredCount || 0,
+      activeListings: stats?.activeListings || 0,
+      pendingApprovals: filteredPending.length,
+    };
   const mapConnections = useMemo(() => [
     ...PROVIDERS.map((provider) => ({
       address: `buyer-grid-${provider.id}`, subsidyID: provider.name, location: `${provider.city}, ${provider.stateName}`,
@@ -267,7 +263,11 @@ export default function GovtDashboard() {
   ], [displayProsumers, pendingList]);
 
   return (
-    <div id="solarsettle-govt-dashboard" className={'ss-app buyer-theme govt-shell' + (darkMode ? ' dark' : '')}>
+    <div
+      id="solarsettle-govt-dashboard"
+      className="ss-app buyer-theme govt-shell glass-dashboard"
+      style={{ '--ss-dashboard-image': `url(${process.env.PUBLIC_URL}/solarsettle-hero.png)` }}
+    >
       <aside className="ss-sidebar">
         <Link to="/" className="ss-brand" style={{ textDecoration: 'none', color: 'inherit' }}><div className="ss-brand-mark">☀</div><div><strong>SolarSettle</strong><span>Clean energy. Trusted together.</span></div></Link>
         <nav className="ss-nav" aria-label="Government navigation">
@@ -282,23 +282,12 @@ export default function GovtDashboard() {
       <main className="ss-main">
         <header className="ss-header"><div className="ss-search"><span>⌕</span><input aria-label="Search monitored accounts" placeholder="Search wallets, subsidy IDs, locations..." /></div><div className="ss-header-actions"><button className="ss-icon-button" aria-label="Alerts">●</button><button className="ss-avatar" aria-label="Government profile">GV</button></div></header>
         <div className="ss-content"><div className="dashboard govt-dashboard">
-        <div className="govt-theme-control">
-          <button className="govt-theme-toggle" type="button" onClick={toggleDarkMode} aria-pressed={darkMode}>
-            {darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-          </button>
-        </div>
-        <h2>🏛️ Government Dashboard</h2>
+        <h2>Government Dashboard</h2>
         <p className="dashboard-sub">Role: Government. {isWalletConnected ? ('Connected: ' + short(account)) : 'Presentation preview with sample registry data.'}</p>
-
-        {isWalletConnected && ownerAddress && !isOwner && (
-          <div className="demo-banner"><strong>Read-only government view</strong><span>This wallet is not the contract owner. Connect the owner wallet {short(ownerAddress)} to approve registrations or apply penalties.</span></div>
-        )}
-
-        {demoMode && <div className="demo-banner"><strong>Demo presentation mode</strong><span>Sample registry values are shown for review. Connect MetaMask to switch to live contract data.</span></div>}
 
         {!isWalletConnected && (
           <div className="panel-form">
-            <h3>🔌 Connect MetaMask to interact with the blockchain</h3>
+            <h3>Connect MetaMask to interact with the blockchain</h3>
             <p className="dashboard-sub">Approvals, penalties, and monitoring require a connected wallet.</p>
             <button className="connect-btn" onClick={connectWallet} disabled={connecting}>
               {connecting ? 'Connecting...' : 'Connect MetaMask'}
@@ -308,10 +297,10 @@ export default function GovtDashboard() {
 
         {stats && (
           <div className="card-grid">
-            <TiltCard className="stat-card"><p className="stat-label">Total Generation Logged</p><p className="stat-value solar">{(selectedState ? filteredProsumers.reduce((sum, row) => sum + row.generated, 0) : stats.totalKwh).toLocaleString('en-IN')} kWh</p></TiltCard>
-            <TiltCard className="stat-card"><p className="stat-label">Approved Prosumers</p><p className="stat-value trust">{selectedState ? filteredProsumers.length : stats.registeredCount}</p></TiltCard>
-            <TiltCard className="stat-card"><p className="stat-label">Active Listings</p><p className="stat-value">{stats.activeListings}</p></TiltCard>
-            <TiltCard className="stat-card"><p className="stat-label">Pending Approvals</p><p className="stat-value" style={{ color: filteredPending.length > 0 ? 'var(--accent-alert)' : undefined }}>{filteredPending.length}</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">{showingSimulationImpact ? 'Verified Generation (Simulation)' : 'Total Generation Logged'}</p><p className="stat-value solar">{headlineMetrics.totalKwh.toLocaleString('en-IN')} kWh</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">Approved Prosumers</p><p className="stat-value trust">{headlineMetrics.registeredCount}</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">{showingSimulationImpact ? 'Active Listings After Review' : 'Active Listings'}</p><p className="stat-value">{headlineMetrics.activeListings}</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">{showingSimulationImpact ? 'Approvals Blocked' : 'Pending Approvals'}</p><p className="stat-value" style={{ color: headlineMetrics.pendingApprovals > 0 ? 'var(--accent-alert)' : undefined }}>{headlineMetrics.pendingApprovals}</p></TiltCard>
           </div>
         )}
 
@@ -348,7 +337,6 @@ export default function GovtDashboard() {
           <TiltCard className="stat-card"><p className="stat-label">Monitored Accounts</p><p className="stat-value">{displayProsumers.length}</p></TiltCard>
           <TiltCard className="stat-card"><p className="stat-label">Open Fraud Cases</p><p className="stat-value alert">{activeFraudCount}</p></TiltCard>
           <TiltCard className="stat-card"><p className="stat-label">Average Trust</p><p className="stat-value trust">{avgTrust}/100</p></TiltCard>
-          <TiltCard className="stat-card"><p className="stat-label">Demo Mode</p><p className="stat-value solar">ON</p></TiltCard>
         </div>
 
         {demoCase && (
@@ -379,18 +367,18 @@ export default function GovtDashboard() {
         />}
 
         {activeTab === 'registry' && <>
-        <h3 className="section-label" style={{ marginTop: 30 }}>📝 Registration approvals</h3>
+        <h3 className="section-label" style={{ marginTop: 30 }}>Registration approvals</h3>
         {!contract ? <p className="dashboard-sub">Connect a wallet to view approvals.</p> : filteredPending.length === 0 ? <p className="dashboard-sub">No pending registrations in this scope.</p> : (
           <div className="table-wrap"><table className="data-table"><thead><tr><th>Wallet</th><th>Subsidy ID</th><th>Location</th><th>Capacity</th><th></th></tr></thead><tbody>
-            {filteredPending.map((r) => (<tr key={r.address}><td className="mono">{short(r.address)}</td><td className="mono">{r.subsidyID}</td><td>{r.location}</td><td>{r.capacityKw} kW</td><td><button className="buy-btn" style={{ width: 'auto', margin: 0 }} onClick={() => handleApprove(r.address)} disabled={pending || (!demoMode && !isOwner)}>{demoMode ? 'Approve sample' : pending ? 'Confirming...' : isOwner ? 'Approve' : 'Owner only'}</button></td></tr>))}
+            {filteredPending.map((r) => (<tr key={r.address}><td className="mono">{short(r.address)}</td><td className="mono">{r.subsidyID}</td><td>{r.location}</td><td>{r.capacityKw} kW</td><td><button className="buy-btn" style={{ width: 'auto', margin: 0 }} onClick={() => handleApprove(r.address)} disabled={pending}>{demoMode ? 'Approve sample' : pending ? 'Confirming...' : 'Approve'}</button></td></tr>))}
           </tbody></table></div>
         )}
 
-        <h3 className="section-label" style={{ marginTop: 30 }}>📍 Registered prosumers — live monitoring</h3>
+        <h3 className="section-label" style={{ marginTop: 30 }}>Registered prosumers — live monitoring</h3>
         {filteredProsumers.length === 0 ? <p className="dashboard-sub">No approved prosumers in this scope.</p> : (
           <div className="table-wrap"><table className="data-table"><thead><tr><th>Wallet</th><th>Subsidy ID</th><th>Location</th><th>Capacity</th><th>Trust</th><th>Generated</th><th>Last Reading</th><th>Risk Signal</th><th>Status</th><th></th></tr></thead><tbody>
             {filteredProsumers.map((p) => (
-              <tr id={`prosumer-${p.address}`} key={p.address} className={p.atRisk ? 'risk-row' : ''}><td className="mono">{short(p.address)} {p.isDemo && <span className="demo-tag">Demo</span>}</td><td className="mono">{p.subsidyID}</td><td>{p.location}</td><td>{p.capacityKw} kW</td><td><strong>{p.trustScore}/100</strong></td><td>{p.generated} kWh</td><td>{p.lastReading} {p.daysSilent > INACTIVITY_WINDOW_DAYS ? '(' + p.daysSilent + 'd silent)' : ''}</td><td>{p.riskReason || getRiskReason(p)}</td><td><span className={'status-pill ' + (p.atRisk ? 'alert' : 'active')}>{p.atRisk ? 'Fraud Risk' : 'Healthy'}</span></td><td>{p.atRisk && (p.isDemo ? <button className="nav-btn" style={{ color: 'var(--accent-alert)' }} onClick={() => handleDemoPenalty(p.address)}>Sim Penalty</button> : <button className="nav-btn" style={{ color: 'var(--accent-alert)' }} onClick={() => handleCheckInactivity(p.address)} disabled={pending || !isOwner}>{demoMode ? 'Apply sample penalty' : isOwner ? 'Apply Penalty' : 'Owner only'}</button>)}</td></tr>
+              <tr id={`prosumer-${p.address}`} key={p.address} className={p.atRisk ? 'risk-row' : ''}><td className="mono">{short(p.address)} {p.isDemo && <span className="demo-tag">Demo</span>}</td><td className="mono">{p.subsidyID}</td><td>{p.location}</td><td>{p.capacityKw} kW</td><td><strong>{p.trustScore}/100</strong></td><td>{p.generated} kWh</td><td>{p.lastReading} {p.daysSilent > INACTIVITY_WINDOW_DAYS ? '(' + p.daysSilent + 'd silent)' : ''}</td><td>{p.riskReason || getRiskReason(p)}</td><td><span className={'status-pill ' + (p.atRisk ? 'alert' : 'active')}>{p.atRisk ? 'Fraud Risk' : 'Healthy'}</span></td><td>{p.atRisk && (p.isDemo ? <button className="nav-btn" style={{ color: 'var(--accent-alert)' }} onClick={() => handleDemoPenalty(p.address)}>Sim Penalty</button> : <button className="nav-btn" style={{ color: 'var(--accent-alert)' }} onClick={() => handleCheckInactivity(p.address)} disabled={pending}>{demoMode ? 'Apply sample penalty' : 'Apply Penalty'}</button>)}</td></tr>
             ))}
           </tbody></table></div>
         )}
@@ -494,12 +482,26 @@ function GridHealthTimeline({ data, range, selectedState }) {
 
 function GridTrack({ provider, points }) {
   const width = 340;
-  const height = 72;
+  const height = 108;
+  const chartTop = 34;
+  const chartBottom = 92;
+  const [activeIndex, setActiveIndex] = useState(Math.max(points.length - 1, 0));
+  useEffect(() => setActiveIndex(Math.max(points.length - 1, 0)), [points]);
   const max = Math.max(...points.map((point) => point.generation), 1);
-  const chartPoints = points.map((point, index) => ({ ...point, x: 6 + (index * (width - 12)) / Math.max(points.length - 1, 1), y: height - 8 - (point.generation / max) * (height - 18) }));
+  const chartPoints = points.map((point, index) => ({ ...point, x: 8 + (index * (width - 16)) / Math.max(points.length - 1, 1), y: chartBottom - (point.generation / max) * (chartBottom - chartTop) }));
   const path = chartPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(' ');
+  const areaPath = `${path} L ${chartPoints.at(-1).x.toFixed(1)} ${chartBottom} L ${chartPoints[0].x.toFixed(1)} ${chartBottom} Z`;
   const riskCount = points.filter((point) => point.risk).length;
-  return <article className="grid-track"><div className="grid-track-head"><div><strong>{provider.name}</strong><span>{provider.city}, {provider.stateName}</span></div><b>{Math.round(points.reduce((sum, point) => sum + point.generation, 0)).toLocaleString('en-IN')} kWh</b></div><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${provider.name} generation timeline`}><path d={path} className="timeline-line" />{chartPoints.filter((point) => point.risk).map((point, index) => <circle key={index} cx={point.x} cy={point.y} r="3.5" className="timeline-point risk"><title>{`${point.label}: ${Math.round(point.generation)} kWh risk spike`}</title></circle>)}</svg><small>{provider.reliability}% reliability · {riskCount ? `${riskCount} spike${riskCount > 1 ? 's' : ''}` : 'No spikes'}</small></article>;
+  const activePoint = chartPoints[Math.min(activeIndex, chartPoints.length - 1)];
+  const gradientId = `grid-fill-${provider.id}`;
+  const selectPointFromPointer = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * width;
+    const index = Math.round(((x - 8) / (width - 16)) * Math.max(points.length - 1, 1));
+    setActiveIndex(Math.max(0, Math.min(points.length - 1, index)));
+  };
+  const tooltipX = Math.min(Math.max(activePoint.x - 49, 4), width - 102);
+  return <article className="grid-track"><div className="grid-track-head"><div><strong>{provider.name}</strong><span>{provider.city}, {provider.stateName}</span></div><b>{Math.round(points.reduce((sum, point) => sum + point.generation, 0)).toLocaleString('en-IN')} kWh</b></div><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${provider.name} interactive generation timeline`} onMouseMove={selectPointFromPointer} onClick={selectPointFromPointer}><defs><linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1"><stop offset="0%" className="timeline-fill-start" /><stop offset="100%" className="timeline-fill-end" /></linearGradient></defs><line x1="8" x2={width - 8} y1={chartTop} y2={chartTop} className="timeline-grid" /><line x1="8" x2={width - 8} y1={(chartTop + chartBottom) / 2} y2={(chartTop + chartBottom) / 2} className="timeline-grid" /><line x1="8" x2={width - 8} y1={chartBottom} y2={chartBottom} className="timeline-axis" /><path d={areaPath} className="timeline-area" fill={`url(#${gradientId})`} /><path d={path} className="timeline-line" /><line x1={activePoint.x} x2={activePoint.x} y1={chartTop} y2={chartBottom} className="timeline-guide" />{chartPoints.map((point, index) => <circle key={point.label} cx={point.x} cy={point.y} r={index === activeIndex ? 5 : point.risk ? 3.8 : 2.6} className={`timeline-point ${point.risk ? 'risk' : ''} ${index === activeIndex ? 'active' : ''}`} tabIndex="0" role="button" aria-label={`${point.label}: ${Math.round(point.generation)} kWh${point.risk ? ', risk spike' : ''}`} onFocus={() => setActiveIndex(index)} onMouseEnter={() => setActiveIndex(index)} onClick={() => setActiveIndex(index)} />)}<g className="timeline-tooltip" transform={`translate(${tooltipX} 3)`}><rect width="102" height="25" rx="5" /><text x="7" y="11">{activePoint.label}</text><text x="7" y="21">{Math.round(activePoint.generation)} kWh{activePoint.risk ? ' · Risk' : ''}</text></g></svg><small>{provider.reliability}% reliability · {riskCount ? `${riskCount} spike${riskCount > 1 ? 's' : ''}` : 'No spikes'} · Hover or select a point for details</small></article>;
 }
 
 function AlertCenter({ alerts, selectedState }) {
